@@ -36,4 +36,7 @@ public class UserDTO {
     public void setNickName(String nickName) {
         this.nickName = nickName;
     }
+    public String toString(){
+        return "{"+this.email+" "+this.nickName+ " "+this.password+"}";
+    }
 }
