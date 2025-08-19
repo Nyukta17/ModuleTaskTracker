@@ -3,14 +3,14 @@ package com.example.SmartNewsHub.DTO;
 public class UserDTO {
     private String email;
     private String password;
-    private String nickName;
+    private String Company;
 
     public UserDTO(){}
 
-    public UserDTO(String email,String password, String nickName){
+    public UserDTO(String email,String password, String Company){
         this.email = email;
         this.password = password;
-        this.nickName = nickName;
+        this.Company = Company;
     }
 
     public String getEmail() {
@@ -21,8 +21,8 @@ public class UserDTO {
         return password;
     }
 
-    public String getNickName() {
-        return nickName;
+    public String getCompany() {
+        return Company;
     }
 
     public void setEmail(String email) {
@@ -33,10 +33,10 @@ public class UserDTO {
         this.password = password;
     }
 
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
+    public void setCompany(String company) {
+        this.Company = company;
     }
     public String toString(){
-        return "{"+this.email+" "+this.nickName+ " "+this.password+"}";
+        return "{"+this.email+" "+this.Company + " "+this.password+"}";
     }
 }

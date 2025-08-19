@@ -1,14 +1,13 @@
 package com.example.SmartNewsHub.controller;
 
+import com.example.SmartNewsHub.DTO.ModulesDTO;
 import com.example.SmartNewsHub.DTO.UserDTO;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -28,7 +27,19 @@ public class UserController {
     @PostMapping("/SingIn")
     public ResponseEntity<String> SingIn(@RequestBody UserDTO dto){
         userService.SingIn(dto);
-        String token = jwTservice.generateToken(dto.getNickName(),"lvl1");
+        String token = jwTservice.generateToken(dto.getCompany(),"lvl1");
         return ResponseEntity.ok(token);
+    }
+    @PostMapping("/SaveCompanyModules")
+    public ResponseEntity<String> SaveCompanyModules(@RequestBody ModulesDTO dto, @RequestHeader("Authorization") String authHeader){
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwTservice.validateToken(token)) {
+                userService.SaveCompanyModules(dto);
+                return ResponseEntity.ok("Настройки сохранены");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или отсутствующий токен");
+
     }
 }

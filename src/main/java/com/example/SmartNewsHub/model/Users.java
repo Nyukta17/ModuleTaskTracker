@@ -19,7 +19,7 @@ public class Users {
     private String password;
 
     @Column(nullable = false,unique = true)
-    private String nickName;
+    private String company;
 
     @Column(nullable = false)
     private String role;
@@ -31,10 +31,10 @@ public class Users {
     public Users() {
     }
 
-    public Users(String email, String password, String nickName, String role) {
+    public Users(String email, String password, String Company, String role) {
         this.email = email;
         this.password=password;
-        this.nickName=nickName;
+        this.company =Company;
         this.role = role;
     }
 
@@ -49,8 +49,8 @@ public class Users {
     public String getPassword() {
         return password;
     }
-    public String getNickName() {
-        return nickName;
+    public String getCompany() {
+        return company;
     }
 
     public String getRole() {
@@ -69,8 +69,8 @@ public class Users {
         this.password = password;
     }
 
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
+    public void setCompany(String company) {
+        this.company = company;
     }
 
     public void setRole(String role) {

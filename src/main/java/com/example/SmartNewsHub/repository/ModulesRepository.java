@@ -1,13 +1,12 @@
 package com.example.SmartNewsHub.repository;
 
+import com.example.SmartNewsHub.model.Company_Module;
 import com.example.SmartNewsHub.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-
 @Repository
-public interface UserRepository extends JpaRepository<Users,Long> {
-    Optional<Users> findByEmail(String email);
-    Optional<Users> findByCompany(String Company);
+public interface ModulesRepository extends JpaRepository<Company_Module,Long>{
+    Optional<Company_Module> findByCompany(Users Company);
 }
