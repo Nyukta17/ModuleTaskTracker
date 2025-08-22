@@ -9,16 +9,20 @@ import com.example.SmartNewsHub.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModulesRepository modulesRepository;
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,ModulesRepository modulesRepository) {
+    private final JWTservice jwtService;
+    public UserService(JWTservice jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder,ModulesRepository modulesRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder =passwordEncoder;
         this.modulesRepository = modulesRepository;
+        this.jwtService = jwtService;
     }
 
     public Users SingUp(UserDTO dto) {
@@ -53,6 +57,24 @@ public class UserService {
 
         return modulesRepository.save(companyModule);
     }
+    public ModulesDTO GetCompanyModules(String token){
+        Users company = userRepository.findByCompany(jwtService.getCompanyName(token)).orElse(null);
+        if(company!=null){
+            Optional<Company_Module> companyModuleOpt = modulesRepository.findByCompany(company);
+            if(companyModuleOpt.isPresent()){
+                Company_Module md = companyModuleOpt.get();
+                ModulesDTO dto = new ModulesDTO();
+                dto.setId(md.getId());
+                dto.setCompany(md.getCompany());
+                dto.setAnalytics(md.isAnalytics());
+                dto.setTimeTracker(md.isTimeTracker());
+                dto.setCalendar(md.isCalendar());
+                dto.setCompanyNews(md.isCompanyNews());
+                return dto;
+            }
 
+        }
+        return null;
+    }
 
 }

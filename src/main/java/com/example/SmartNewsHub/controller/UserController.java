@@ -42,4 +42,18 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или отсутствующий токен");
 
     }
+    @PostMapping("/GetCompanyModules")
+    public ResponseEntity<ModulesDTO> GetCompanyModules(@RequestHeader("Authorization")String authHeader){
+        if(authHeader!=null&&authHeader.startsWith("Bearer ")){
+            String token = authHeader.substring(7);
+            if(jwTservice.validateToken(token)){
+                ModulesDTO modules = userService.GetCompanyModules(token);
+                if(modules!=null){
+                    return ResponseEntity.ok(modules);
+                }
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
 }
