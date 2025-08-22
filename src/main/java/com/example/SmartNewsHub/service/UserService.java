@@ -6,8 +6,10 @@ import com.example.SmartNewsHub.model.Company_Module;
 import com.example.SmartNewsHub.model.Users;
 import com.example.SmartNewsHub.repository.ModulesRepository;
 import com.example.SmartNewsHub.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -33,17 +35,19 @@ public class UserService {
         user.setRole("lvl1");
         return userRepository.save(user);
     }
-    public Users SingIn(UserDTO dto){
+    public Users SingIn(UserDTO dto) {
         Users user;
-        if(dto.getEmail()!=null && !dto.getEmail().isEmpty()){
-            user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new RuntimeException("Пользователь с таким email не найден"));
+        if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+            user = userRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с таким email не найден"));
+        } else if (dto.getCompany() != null && !dto.getCompany().isEmpty()) {
+            user = userRepository.findByCompany(dto.getCompany())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с таким ником не найден"));
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Нужно указать email или никнейм");
         }
-        else if(dto.getCompany()!=null && !dto.getCompany().isEmpty()){
-            user = userRepository.findByCompany(dto.getCompany()).orElseThrow(()->new RuntimeException("Пользователь с таким ником не найден"));
-        }
-        else{throw new RuntimeException("Нужно указать email или никнейм");}
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Неверный пароль");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Неверный пароль");
         }
         return user;
     }
