@@ -7,6 +7,9 @@ class ApiRoute{
     SingUp():string{
         return this.ApiBase+"/api/SingUp";
     }
+    getCompanyModules():string{
+        return this.ApiBase+"/api/GetCompanyModules";
+    }
 }
 
 export default ApiRoute;

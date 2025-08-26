@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Button } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
+import { useNavigate } from 'react-router-dom';
 
 const api = new ApiRoute;
+
 
 let AuthForm = () => {
     const [isLog, setIsLog] = useState(true);
@@ -19,6 +21,7 @@ let SingIn = () => {
     const [companyOrEmail, setCompanyOrEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
     let Authentication = async () => {
         try {
 
@@ -47,7 +50,8 @@ let SingIn = () => {
 
             if (date) {
                 localStorage.setItem("jwtToken", date);
-                console.log("токен сохранен ->" + date)
+                navigate("/MainMenu")
+                
             } else {
                 console.log("сервер ответил->" + date)
                 throw new Error("Токен не получен");
