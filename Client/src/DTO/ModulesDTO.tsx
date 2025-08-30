@@ -7,6 +7,7 @@ class ModulesDTO {
   private _timeTracker: boolean;
   private _calendar: boolean;
   private _companyNews: boolean;
+  private _task_tracker_base: boolean;
 
   constructor(
     id: number,
@@ -14,7 +15,8 @@ class ModulesDTO {
     analytics: boolean,
     timeTracker: boolean,
     calendar: boolean,
-    companyNews: boolean
+    companyNews: boolean,
+    task_tracker_base: boolean
   ) {
     this._id = id;
     this._company = company;
@@ -22,6 +24,7 @@ class ModulesDTO {
     this._timeTracker = timeTracker;
     this._calendar = calendar;
     this._companyNews = companyNews;
+    this._task_tracker_base = task_tracker_base
   }
 
   get id(): number {
@@ -64,6 +67,12 @@ class ModulesDTO {
   }
   set companyNews(value: boolean) {
     this._companyNews = value;
+  }
+  get task_tracker_base():boolean{
+    return this._task_tracker_base;
+  }
+  set task_tracker_base(value:boolean){
+    this._task_tracker_base=value
   }
 }
 
