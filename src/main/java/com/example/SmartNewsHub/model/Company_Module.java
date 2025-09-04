@@ -25,6 +25,18 @@ public class Company_Module {
     @Column(nullable = false)
     private boolean companyNews;
 
+    @Column(nullable = false,columnDefinition = "boolean default true")
+    private boolean task_tracker_base;
+
+    public boolean isTask_tracker_base() {
+        return task_tracker_base;
+    }
+
+    public void setTask_tracker_base(boolean task_tracker_base) {
+        this.task_tracker_base = task_tracker_base;
+    }
+
+
     public long getId() {
         return id;
     }

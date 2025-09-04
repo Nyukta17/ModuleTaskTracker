@@ -11,6 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -61,24 +64,26 @@ public class UserService {
 
         return modulesRepository.save(companyModule);
     }
-    public ModulesDTO GetCompanyModules(String token){
+    public List<ModulesDTO> GetCompanyModules(String token){
         Users company = userRepository.findByCompany(jwtService.getCompanyName(token)).orElse(null);
-        if(company!=null){
-            Optional<Company_Module> companyModuleOpt = modulesRepository.findByCompany(company);
-            if(companyModuleOpt.isPresent()){
-                Company_Module md = companyModuleOpt.get();
+        if(company != null){
+            List<Company_Module> companyModules = modulesRepository.findByCompany(company);
+            List<ModulesDTO> dtos = new ArrayList<>();
+            for (Company_Module md : companyModules) {
                 ModulesDTO dto = new ModulesDTO();
                 dto.setId(md.getId());
                 dto.setCompany(md.getCompany());
                 dto.setAnalytics(md.isAnalytics());
                 dto.setTimeTracker(md.isTimeTracker());
                 dto.setCalendar(md.isCalendar());
+                dto.setTask_tracker_base(md.isTask_tracker_base());
                 dto.setCompanyNews(md.isCompanyNews());
-                return dto;
+                dtos.add(dto);
             }
-
+            return dtos;
         }
-        return null;
+        return Collections.emptyList();
     }
+
 
 }

@@ -1,47 +1,66 @@
-
-import { useState } from 'react'
-
-import AuthForm from './components/AuthForm'
-import MainMenu from './components/MainMenu'
-
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import {jwtDecode} from "jwt-decode";
-
-
-function isTokenValid(token:string){
-  try{
-    const decoded:{exp: number}=jwtDecode(token);
-    if(!decoded.exp) return false;
-    const expTime = decoded.exp * 1000;
-    return Date.now() < expTime;
-  } catch (error) {
-    return false;
-  }
-  
-}
-
+import AuthForm from './components/AuthForm';
+import HubList from './components/HubList';
+import Workspace from './components/WorkSpace';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const token = localStorage.getItem("jwtToken");
-    return token?isTokenValid(token):false;
-  });
+  // Состояния приложения
+  const [token, setToken] = useState(() => localStorage.getItem('jwtToken') || '');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!token);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+
+  // Обработчик успешного логина
+  const handleLogin = (newToken: string) => {
+    localStorage.setItem('jwtToken', newToken);
+    setToken(newToken);
+    setIsAuthenticated(true);
+    setRedirectPath('/hublist');  // Запускаем навигацию через Navigate
+  };
+
+  // Обработчик выбора проекта
+  const handleSelectProject = (project: any) => {
+    setSelectedProject(project);
+    setRedirectPath(`/hub/${project.id}`); // Навигация через состояние
+  };
 
   return (
     <Router>
+      {/* Навигация через Navigate, если redirectPath установлен */}
+      {redirectPath && <Navigate to={redirectPath} replace />}
+      
       <Routes>
-        <Route 
-          path="/" 
-          element={isAuthenticated ? <Navigate to="/MainMenu" replace /> : <Navigate to="/AuthForm" replace />} 
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? <Navigate to="/hublist" replace /> : <Navigate to="/authform" replace />
+          }
         />
-        <Route 
-          path="/MainMenu" 
-          element={isAuthenticated ? <MainMenu /> : <Navigate to="/AuthForm" replace />} 
+        <Route path="/authform" element={<AuthForm onLogin={handleLogin} />} />
+        <Route
+          path="/hublist"
+          element={
+            isAuthenticated ? (
+              <HubList token={token} onSelectProject={handleSelectProject} />
+            ) : (
+              <Navigate to="/authform" replace />
+            )
+          }
         />
-        <Route path="/AuthForm" element={<AuthForm />} />
+        <Route
+          path="/hub/:id"
+          element={
+            isAuthenticated && selectedProject ? (
+              <Workspace module={selectedProject} />
+            ) : (
+              <Navigate to="/hublist" replace />
+            )
+          }
+        />
       </Routes>
     </Router>
   );
 }
 
-export default App
+export default App;

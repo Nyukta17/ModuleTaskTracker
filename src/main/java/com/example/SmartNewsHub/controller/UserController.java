@@ -9,9 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
     private final UserService userService;
     private final JWTservice jwTservice;
@@ -43,12 +45,12 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или отсутствующий токен");
 
     }
-    @PostMapping("/GetCompanyModules")
-    public ResponseEntity<ModulesDTO> GetCompanyModules(@RequestHeader("Authorization")String authHeader){
+    @GetMapping("/GetCompanyModules")
+    public ResponseEntity<List<ModulesDTO>> GetCompanyModules(@RequestHeader("Authorization")String authHeader){
         if(authHeader!=null&&authHeader.startsWith("Bearer ")){
             String token = authHeader.substring(7);
             if(jwTservice.validateToken(token)){
-                ModulesDTO modules = userService.GetCompanyModules(token);
+                List<ModulesDTO> modules = userService.GetCompanyModules(token);
                 if(modules!=null){
                     return ResponseEntity.ok(modules);
                 }

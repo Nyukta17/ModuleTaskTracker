@@ -3,147 +3,174 @@ import { Button } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
 import { useNavigate } from 'react-router-dom';
 
-const api = new ApiRoute;
+const api = new ApiRoute();
 
-
-let AuthForm = () => {
-    const [isLog, setIsLog] = useState(true);
-    return (<>
-        {isLog ? <SingIn /> : <SingUp />}
-        <Button onClick={() => setIsLog(!isLog)}>
-            {isLog ? "Перейти к регистрации" : "Перейти ко входу"}
-        </Button>
-    </>)
-
+interface AuthFormProps {
+  onLogin: (token: string) => void;
 }
 
-let SingIn = () => {
-    const [companyOrEmail, setCompanyOrEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
-    let Authentication = async () => {
-        try {
+const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
+  const [isLog, setIsLog] = useState(true);
 
-            const bodyData: Record<string, string> = { password };
-            if (companyOrEmail.includes("@")) {
-                bodyData.email = companyOrEmail;
-            }
-            else {
-                bodyData.company = companyOrEmail
-            }
+  return (
+    <>
+      {isLog ? <SignIn onLogin={onLogin} /> : <SignUp />}
+      <Button onClick={() => setIsLog(!isLog)}>
+        {isLog ? "Перейти к регистрации" : "Перейти ко входу"}
+      </Button>
+    </>
+  );
+};
 
-            const response = await fetch(api.SingIn(), {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(bodyData)
-            })
-            if (!response.ok) {
-                const errorData = await response.json();
-                setError(errorData.message || "Неверный логин или пароль");
-                return;
-            }
-
-            const date = await response.text();
-
-            if (date) {
-                localStorage.setItem("jwtToken", date);
-                navigate("/MainMenu")
-                
-            } else {
-                console.log("сервер ответил->" + date)
-                throw new Error("Токен не получен");
-            }
-        }
-        catch (error) {
-            console.error("Ошибка при входе:", error)
-        }
-    }
-    return (<>
-        <h1>Вход</h1>
-        <input type="text" name="CompanyOrEmail" value={companyOrEmail} onChange={(e) => setCompanyOrEmail(e.target.value)} />
-        <input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <Button onClick={Authentication}>Войти</Button>
-        {error && <div style={{ color: "red" }}>{error}</div>}
-    </>)
+interface SignInProps {
+  onLogin: (token: string) => void;
 }
 
-let SingUp = () => {
-    const [company, setCompany] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [messag,setMessag] = useState("");
+const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
+  const [companyOrEmail, setCompanyOrEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-    const handlePasswordChange = (value: string) => {
-        setPassword(value);
+  const Authentication = async () => {
+    try {
+      const bodyData: Record<string, string> = { password };
+      if (companyOrEmail.includes("@")) {
+        bodyData.email = companyOrEmail;
+      } else {
+        bodyData.company = companyOrEmail;
+      }
 
-        if (confirmPassword && value != confirmPassword) {
-            setError("Пароли не совпадают")
-        }
-        else {
-            setError(null);
-        }
+      const response = await fetch(api.SingIn(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || "Неверный логин или пароль");
+        return;
+      }
+
+      const token = await response.text();
+
+      if (token) {
+        localStorage.setItem("jwtToken", token);
+        onLogin(token);  // сообщаем родителю о новом токене
+        navigate("/hublist");
+      } else {
+        setError("Токен не получен");
+      }
+    } catch (error) {
+      setError("Ошибка при входе");
+      console.error("Ошибка при входе:", error);
     }
+  };
 
-    const handleConfirmPasswordChange = (value: string) => {
-        setConfirmPassword(value);
-        if (password !== value) {
-            setError("Пароли не совпадают");
-        } else {
-            setError(null);
-        }
-    };
+  return (
+    <>
+      <h1>Вход</h1>
+      <input
+        type="text"
+        name="CompanyOrEmail"
+        value={companyOrEmail}
+        onChange={(e) => setCompanyOrEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        name="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <Button onClick={Authentication}>Войти</Button>
+      {error && <div style={{ color: "red" }}>{error}</div>}
+    </>
+  );
+};
 
-    const Registration = async () => {
-        try {
-            const response = await fetch(
-                api.SingUp(), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ "company": company, "email": email, "password": password })
-            }
-            )
-            if (!response.ok) {
-                const errorData = await response.json();
-                setError(errorData.message || "Неверный логин или пароль");
-                return;
-            }
-            const text = await response.text();
-            setMessag(text);
-        }
+const SignUp: React.FC = () => {
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
 
-        catch (error) {
-            console.log("Ошибка при регистрации: ", error)
-        }
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (confirmPassword && value !== confirmPassword) {
+      setError("Пароли не совпадают");
+    } else {
+      setError(null);
     }
+  };
 
-    return (<>
-        <h1>Окно регистрации</h1>
-        <input type="text" name="company" value={company} onChange={(e) => setCompany(e.target.value)} />
-        <input type="text" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input
-            type="password"
-            placeholder="Пароль"
-            value={password}
-            onChange={(e) => handlePasswordChange(e.target.value)}
-        />
-        <input
-            type="password"
-            placeholder="Подтверждение пароля"
-            value={confirmPassword}
-            onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-        />
-        {error && <div style={{ color: "red" }}>{error}</div>}
-        <Button onClick={Registration}>Зарегистрироваться</Button>
-        {messag && <div style={{ color: "red" }}>{messag}</div>}
-    </>)
-}
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+    if (password !== value) {
+      setError("Пароли не совпадают");
+    } else {
+      setError(null);
+    }
+  };
 
+  const Registration = async () => {
+    try {
+      const response = await fetch(api.SingUp(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company, email, password }),
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || "Ошибка регистрации");
+        return;
+      }
 
+      const text = await response.text();
+      setMessage(text);
+    } catch (error) {
+      setError("Ошибка при регистрации");
+      console.log("Ошибка при регистрации: ", error);
+    }
+  };
 
-export default AuthForm
+  return (
+    <>
+      <h1>Окно регистрации</h1>
+      <input
+        type="text"
+        name="company"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+      />
+      <input
+        type="text"
+        name="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Пароль"
+        value={password}
+        onChange={(e) => handlePasswordChange(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Подтверждение пароля"
+        value={confirmPassword}
+        onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+      />
+      {error && <div style={{ color: "red" }}>{error}</div>}
+      <Button onClick={Registration}>Зарегистрироваться</Button>
+      {message && <div>{message}</div>}
+    </>
+  );
+};
+
+export default AuthForm;

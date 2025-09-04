@@ -9,6 +9,15 @@ public class ModulesDTO {
     private boolean timeTracker;
     private boolean calendar;
     private boolean companyNews;
+    private boolean task_tracker_base;
+
+    public boolean isTask_tracker_base() {
+        return task_tracker_base;
+    }
+
+    public void setTask_tracker_base(boolean task_tracker_base) {
+        this.task_tracker_base = task_tracker_base;
+    }
 
     public long getId() {
         return id;
