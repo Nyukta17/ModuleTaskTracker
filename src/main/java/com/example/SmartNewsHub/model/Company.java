@@ -6,8 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="users")
-public class Users {
+@Table(name="company")
+public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -28,10 +28,10 @@ public class Users {
     @Column(nullable = false, unique = false)
     private LocalDateTime createdAt;
 
-    public Users() {
+    public Company() {
     }
 
-    public Users(String email, String password, String Company, String role) {
+    public Company(String email, String password, String Company, String role) {
         this.email = email;
         this.password=password;
         this.company =Company;

@@ -11,7 +11,7 @@ public class Company_Module {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private Users company;
+    private Company company;
 
     @Column(nullable = false)
     private boolean analytics;
@@ -45,11 +45,11 @@ public class Company_Module {
         this.id = id;
     }
 
-    public Users getCompany() {
+    public Company getCompany() {
         return company;
     }
 
-    public void setCompany(Users company) {
+    public void setCompany(Company company) {
         this.company = company;
     }
 

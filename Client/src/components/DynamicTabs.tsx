@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
+import ApiRoute from "../api/ApiRoute";
+
+const api = new ApiRoute();
 
 interface ModuleDTO {
   id: string;
@@ -20,35 +23,43 @@ const moduleNamesMap: Record<string, string> = {
 };
 
 const DynamicTabs: React.FC<Props> = ({ data }) => {
-  // Модули - ключи с true, имеющие отображаемое имя
   let modules: ModuleDTO[] = Object.entries(data)
     .filter(([key, value]) => value && moduleNamesMap[key])
     .map(([key]) => ({ id: key, name: moduleNamesMap[key] }));
 
-  // Сортируем с analytics первым
   modules.sort((a, b) =>
     a.id === "analytics" ? -1 : b.id === "analytics" ? 1 : 0
   );
 
-  // Активный ключ - первый модуль из массива либо пустой
   const [activeKey, setActiveKey] = useState<string>(modules[0]?.id || "");
-
   const [loadingStatus, setLoadingStatus] = useState<Record<string, boolean>>({});
   const [errorStatus, setErrorStatus] = useState<Record<string, string | null>>({});
   const [loadedData, setLoadedData] = useState<Record<string, any>>({});
 
-  // Загрузка данных для активной вкладки (симуляция)
   useEffect(() => {
-    if (activeKey && !loadedData[activeKey]) {
+    if (activeKey && !loadedData[activeKey] && !loadingStatus[activeKey]) {
       setLoadingStatus((prev) => ({ ...prev, [activeKey]: true }));
-      setTimeout(() => {
-        setLoadingStatus((prev) => ({ ...prev, [activeKey]: false }));
-        setLoadedData((prev) => ({ ...prev, [activeKey]: { placeholder: "В работе" } }));
-      }, 1000);
-    }
-  }, [activeKey, loadedData]);
+      setErrorStatus((prev) => ({ ...prev, [activeKey]: null }));
 
-  // Обработчик переключения вкладок
+      fetch(`/api/modules/${activeKey}`) // замените URL на ваш API
+        .then((response) => {
+          if (!response.ok) throw new Error(`Ошибка загрузки: ${response.statusText}`);
+          return response.json();
+        })
+        .then((data) => {
+          setLoadedData((prev) => ({ ...prev, [activeKey]: data }));
+          setErrorStatus((prev) => ({ ...prev, [activeKey]: null }));
+        })
+        .catch((error) => {
+          setErrorStatus((prev) => ({ ...prev, [activeKey]: error.message }));
+          setLoadedData((prev) => ({ ...prev, [activeKey]: null }));
+        })
+        .finally(() => {
+          setLoadingStatus((prev) => ({ ...prev, [activeKey]: false }));
+        });
+    }
+  }, [activeKey, loadedData, loadingStatus]);
+
   const handleSelect = (key: string | null) => {
     if (key) setActiveKey(key);
   };
@@ -61,18 +72,43 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
         <Tab eventKey={module.id} title={module.name} key={module.id}>
           <div style={{ padding: 20, minHeight: 200 }}>
             {loadingStatus[module.id] && <p>Загрузка данных...</p>}
-            {errorStatus[module.id] && <p style={{ color: "red" }}>Ошибка: {errorStatus[module.id]}</p>}
+            {errorStatus[module.id] && (
+              <p style={{ color: "red" }}>Ошибка: {errorStatus[module.id]}</p>
+            )}
             {!loadingStatus[module.id] && !errorStatus[module.id] && loadedData[module.id] && (
-              <p>{loadedData[module.id].placeholder}</p>
+              <ModuleContent moduleId={module.id} data={loadedData[module.id]} />
             )}
             {!loadingStatus[module.id] && !errorStatus[module.id] && !loadedData[module.id] && (
-              <p>Нет данных для отображения</p>
+              <p>В работе</p>
             )}
           </div>
         </Tab>
       ))}
     </Tabs>
   );
+};
+
+interface ModuleContentProps {
+  moduleId: string;
+  data: any;
+}
+
+const ModuleContent: React.FC<ModuleContentProps> = ({ moduleId, data }) => {
+  
+  switch (moduleId) {
+    case "analytics":
+      return <p>Analytics data: {JSON.stringify(data)}</p>;
+    case "timeTracker":
+      return <p>Time Tracker data: {JSON.stringify(data)}</p>;
+    case "calendar":
+      return <p>Calendar data: {JSON.stringify(data)}</p>;
+    case "companyNews":
+      return <p>Company News data: {JSON.stringify(data)}</p>;
+    case "task_tracker_base":
+      return <p>Task Tracker Base data: {JSON.stringify(data)}</p>;
+    default:
+      return <p>Модуль не реализован.</p>;
+  }
 };
 
 export default DynamicTabs;

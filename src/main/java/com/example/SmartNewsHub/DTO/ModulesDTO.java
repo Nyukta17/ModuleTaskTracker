@@ -1,10 +1,10 @@
 package com.example.SmartNewsHub.DTO;
 
-import com.example.SmartNewsHub.model.Users;
+import com.example.SmartNewsHub.model.Company;
 
 public class ModulesDTO {
     private long id;
-    private Users company;
+    private Company company;
     private boolean analytics;
     private boolean timeTracker;
     private boolean calendar;
@@ -27,11 +27,11 @@ public class ModulesDTO {
         this.id = id;
     }
 
-    public Users getCompany() {
+    public Company getCompany() {
         return company;
     }
 
-    public void setCompany(Users company) {
+    public void setCompany(Company company) {
         this.company = company;
     }
 

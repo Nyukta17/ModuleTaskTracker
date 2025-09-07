@@ -1,9 +1,9 @@
 package com.example.SmartNewsHub.controller;
 
 import com.example.SmartNewsHub.DTO.ModulesDTO;
-import com.example.SmartNewsHub.DTO.UserDTO;
+import com.example.SmartNewsHub.DTO.CompanyDTO;
 import com.example.SmartNewsHub.service.JWTservice;
-import com.example.SmartNewsHub.service.UserService;
+import com.example.SmartNewsHub.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,24 +12,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/company")
 @CrossOrigin(origins = "http://localhost:5173")
-public class UserController {
-    private final UserService userService;
+public class CompanyController {
+    private final CompanyService companyService;
     private final JWTservice jwTservice;
     @Autowired
-    public UserController(UserService userService,JWTservice jwTservice){
-        this.userService = userService;
+    public CompanyController(CompanyService companyService, JWTservice jwTservice){
+        this.companyService = companyService;
         this.jwTservice = jwTservice;
     }
     @PostMapping("/SingUp")
-    public ResponseEntity<String> SingUp(@RequestBody UserDTO dto){
-        userService.SingUp(dto);
+    public ResponseEntity<String> SingUp(@RequestBody CompanyDTO dto){
+        companyService.SingUp(dto);
         return ResponseEntity.ok("Пользователь зарегистрирован");
     }
     @PostMapping("/SingIn")
-    public ResponseEntity<String> SingIn(@RequestBody UserDTO dto){
-        userService.SingIn(dto);
+    public ResponseEntity<String> SingIn(@RequestBody CompanyDTO dto){
+        companyService.SingIn(dto);
         String token = jwTservice.generateToken(dto.getCompany(),"lvl1");
         return ResponseEntity.ok(token);
     }
@@ -38,7 +38,7 @@ public class UserController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             if (jwTservice.validateToken(token)) {
-                userService.SaveCompanyModules(dto);
+                companyService.SaveCompanyModules(dto);
                 return ResponseEntity.ok("Настройки сохранены");
             }
         }
@@ -50,7 +50,7 @@ public class UserController {
         if(authHeader!=null&&authHeader.startsWith("Bearer ")){
             String token = authHeader.substring(7);
             if(jwTservice.validateToken(token)){
-                List<ModulesDTO> modules = userService.GetCompanyModules(token);
+                List<ModulesDTO> modules = companyService.GetCompanyModules(token);
                 if(modules!=null){
                     return ResponseEntity.ok(modules);
                 }
