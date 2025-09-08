@@ -1,12 +1,15 @@
 package com.example.SmartNewsHub.controller;
 
 import com.example.SmartNewsHub.DTO.NewsModuleDTO;
+import com.example.SmartNewsHub.model.NewsModule;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/news")
@@ -18,6 +21,18 @@ public class NewsController {
         this.jwTservice = jwtService;
         this.newsService= newsService;
     }
+    @GetMapping("/companyNews")
+    public ResponseEntity<List<NewsModule>> getAllNews(@RequestBody NewsModuleDTO dto, @RequestHeader("Authorization") String authHead) {
+        if(authHead != null && authHead.startsWith("Bearer ")) {
+            String token = authHead.substring(7);
+            if(jwTservice.validateToken(token)) {
+                List<NewsModule> news = newsService.getAllNews(dto.getCompanyId());
+                return ResponseEntity.ok(news);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
     @PostMapping("/createNews")
     public ResponseEntity<String> createNews(@RequestBody NewsModuleDTO dto, @RequestHeader("Authorization") String autoHeader){
         if(autoHeader!=null&&autoHeader.startsWith("Bearer ")){

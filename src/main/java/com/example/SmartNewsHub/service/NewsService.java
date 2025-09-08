@@ -6,9 +6,12 @@ import com.example.SmartNewsHub.model.NewsModule;
 import com.example.SmartNewsHub.repository.CompanyRepository;
 import com.example.SmartNewsHub.repository.NewsRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+@Service
 public class NewsService {
     private JWTservice jwTservice;
     private NewsRepository newsRepository;
@@ -17,6 +20,10 @@ public class NewsService {
         this.jwTservice = jwTservice;
         this.newsRepository = newsRepository;
         this.companyRepository= companyRepository;
+    }
+
+    public List<NewsModule> getAllNews(Long id){
+        return newsRepository.findAllByCompany_Id(id);
     }
 
     public NewsModule createNews(NewsModuleDTO dto){

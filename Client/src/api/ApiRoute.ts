@@ -10,6 +10,9 @@ class ApiRoute{
     getCompanyModules():string{
         return this.ApiBase+"/company/GetCompanyModules";
     }
+    getAllNews():string{
+        return this.ApiBase+"/news"
+    }
 }
 
 export default ApiRoute;

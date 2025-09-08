@@ -32,60 +32,55 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
   );
 
   const [activeKey, setActiveKey] = useState<string>(modules[0]?.id || "");
-  const [loadingStatus, setLoadingStatus] = useState<Record<string, boolean>>({});
-  const [errorStatus, setErrorStatus] = useState<Record<string, string | null>>({});
-  const [loadedData, setLoadedData] = useState<Record<string, any>>({});
-
-  useEffect(() => {
-    if (activeKey && !loadedData[activeKey] && !loadingStatus[activeKey]) {
-      setLoadingStatus((prev) => ({ ...prev, [activeKey]: true }));
-      setErrorStatus((prev) => ({ ...prev, [activeKey]: null }));
-
-      fetch(`/api/modules/${activeKey}`) // замените URL на ваш API
-        .then((response) => {
-          if (!response.ok) throw new Error(`Ошибка загрузки: ${response.statusText}`);
-          return response.json();
-        })
-        .then((data) => {
-          setLoadedData((prev) => ({ ...prev, [activeKey]: data }));
-          setErrorStatus((prev) => ({ ...prev, [activeKey]: null }));
-        })
-        .catch((error) => {
-          setErrorStatus((prev) => ({ ...prev, [activeKey]: error.message }));
-          setLoadedData((prev) => ({ ...prev, [activeKey]: null }));
-        })
-        .finally(() => {
-          setLoadingStatus((prev) => ({ ...prev, [activeKey]: false }));
-        });
-    }
-  }, [activeKey, loadedData, loadingStatus]);
-
-  const handleSelect = (key: string | null) => {
-    if (key) setActiveKey(key);
-  };
 
   if (modules.length === 0) return <p>Нет доступных модулей для отображения.</p>;
 
   return (
-    <Tabs activeKey={activeKey} onSelect={handleSelect} className="mb-3" id="dynamic-tabs">
+    <Tabs
+      activeKey={activeKey}
+      onSelect={(k) => k && setActiveKey(k)}
+      className="mb-3"
+      id="dynamic-tabs"
+    >
       {modules.map((module) => (
         <Tab eventKey={module.id} title={module.name} key={module.id}>
           <div style={{ padding: 20, minHeight: 200 }}>
-            {loadingStatus[module.id] && <p>Загрузка данных...</p>}
-            {errorStatus[module.id] && (
-              <p style={{ color: "red" }}>Ошибка: {errorStatus[module.id]}</p>
-            )}
-            {!loadingStatus[module.id] && !errorStatus[module.id] && loadedData[module.id] && (
-              <ModuleContent moduleId={module.id} data={loadedData[module.id]} />
-            )}
-            {!loadingStatus[module.id] && !errorStatus[module.id] && !loadedData[module.id] && (
-              <p>В работе</p>
-            )}
+            <ModuleDataLoader moduleId={module.id} />
           </div>
         </Tab>
       ))}
     </Tabs>
   );
+};
+
+interface ModuleDataLoaderProps {
+  moduleId: string;
+}
+
+const ModuleDataLoader: React.FC<ModuleDataLoaderProps> = ({ moduleId }) => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    fetch(api.getCompanyModules + `/${moduleId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Ошибка загрузки: ${res.statusText}`);
+        return res.json();
+      })
+      .then((json) => setData(json))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [moduleId]);
+
+  if (loading) return <p>Загрузка данных...</p>;
+  if (error) return <p style={{ color: "red" }}>Ошибка: {error}</p>;
+  if (!data) return <p>В работе</p>;
+
+  return <ModuleContent moduleId={moduleId} data={data} />;
 };
 
 interface ModuleContentProps {
@@ -94,7 +89,6 @@ interface ModuleContentProps {
 }
 
 const ModuleContent: React.FC<ModuleContentProps> = ({ moduleId, data }) => {
-  
   switch (moduleId) {
     case "analytics":
       return <p>Analytics data: {JSON.stringify(data)}</p>;
