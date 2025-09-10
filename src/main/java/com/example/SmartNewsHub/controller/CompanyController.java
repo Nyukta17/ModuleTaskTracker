@@ -2,6 +2,7 @@ package com.example.SmartNewsHub.controller;
 
 import com.example.SmartNewsHub.DTO.ModulesDTO;
 import com.example.SmartNewsHub.DTO.CompanyDTO;
+import com.example.SmartNewsHub.model.Company;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/company")
-@CrossOrigin(origins = "http://localhost:5173")
 public class CompanyController {
     private final CompanyService companyService;
     private final JWTservice jwTservice;
@@ -29,8 +29,8 @@ public class CompanyController {
     }
     @PostMapping("/SingIn")
     public ResponseEntity<String> SingIn(@RequestBody CompanyDTO dto){
-        companyService.SingIn(dto);
-        String token = jwTservice.generateToken(dto.getCompany(),"lvl1");
+        Company company = companyService.SingIn(dto);
+        String token = jwTservice.generateToken(dto.getCompany(),"lvl1",company.getId());
         return ResponseEntity.ok(token);
     }
     @PostMapping("/SaveCompanyModules")

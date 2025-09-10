@@ -7,11 +7,13 @@ public class CompanyDTO {
 
     public CompanyDTO(){}
 
-    public CompanyDTO(String email, String password, String Company){
+    public CompanyDTO(String email, String password, String Company,Long id){
         this.email = email;
         this.password = password;
         this.Company = Company;
     }
+
+
 
     public String getEmail() {
         return email;

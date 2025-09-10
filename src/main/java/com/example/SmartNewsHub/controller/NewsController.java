@@ -21,12 +21,12 @@ public class NewsController {
         this.jwTservice = jwtService;
         this.newsService= newsService;
     }
-    @GetMapping("/companyNews")
-    public ResponseEntity<List<NewsModule>> getAllNews(@RequestBody NewsModuleDTO dto, @RequestHeader("Authorization") String authHead) {
+    @GetMapping("/getCompanyNews")
+    public ResponseEntity<List<NewsModule>> getAllNews(@RequestHeader("Authorization") String authHead) {
         if(authHead != null && authHead.startsWith("Bearer ")) {
             String token = authHead.substring(7);
             if(jwTservice.validateToken(token)) {
-                List<NewsModule> news = newsService.getAllNews(dto.getCompanyId());
+                List<NewsModule> news = newsService.getAllNews(jwTservice.getId(token));
                 return ResponseEntity.ok(news);
             }
         }

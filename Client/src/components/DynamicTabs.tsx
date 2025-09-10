@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
-import ApiRoute from "../api/ApiRoute";
+import CompanyNewsComponent from "./Modules/CompanyNewsComponent";
 
-const api = new ApiRoute();
+
+
 
 interface ModuleDTO {
   id: string;
@@ -35,6 +36,23 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
 
   if (modules.length === 0) return <p>Нет доступных модулей для отображения.</p>;
 
+  const renderTabContent = (moduleId: string) => {
+    switch (moduleId) {
+      // case "analytics":
+      //   return <AnalyticsComponent />;
+      // case "timeTracker":
+      //   return <TimeTrackerComponent />;
+      // case "calendar":
+      //   return <CalendarComponent />;
+      case "companyNews":
+        return <CompanyNewsComponent />;
+      // case "task_tracker_base":
+      //   return <TaskTrackerBaseComponent />;
+      default:
+        return <p>Модуль не реализован.</p>;
+    }
+  };
+
   return (
     <Tabs
       activeKey={activeKey}
@@ -45,64 +63,12 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
       {modules.map((module) => (
         <Tab eventKey={module.id} title={module.name} key={module.id}>
           <div style={{ padding: 20, minHeight: 200 }}>
-            <ModuleDataLoader moduleId={module.id} />
+            {renderTabContent(module.id)}
           </div>
         </Tab>
       ))}
     </Tabs>
   );
-};
-
-interface ModuleDataLoaderProps {
-  moduleId: string;
-}
-
-const ModuleDataLoader: React.FC<ModuleDataLoaderProps> = ({ moduleId }) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    fetch(api.getCompanyModules + `/${moduleId}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Ошибка загрузки: ${res.statusText}`);
-        return res.json();
-      })
-      .then((json) => setData(json))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [moduleId]);
-
-  if (loading) return <p>Загрузка данных...</p>;
-  if (error) return <p style={{ color: "red" }}>Ошибка: {error}</p>;
-  if (!data) return <p>В работе</p>;
-
-  return <ModuleContent moduleId={moduleId} data={data} />;
-};
-
-interface ModuleContentProps {
-  moduleId: string;
-  data: any;
-}
-
-const ModuleContent: React.FC<ModuleContentProps> = ({ moduleId, data }) => {
-  switch (moduleId) {
-    case "analytics":
-      return <p>Analytics data: {JSON.stringify(data)}</p>;
-    case "timeTracker":
-      return <p>Time Tracker data: {JSON.stringify(data)}</p>;
-    case "calendar":
-      return <p>Calendar data: {JSON.stringify(data)}</p>;
-    case "companyNews":
-      return <p>Company News data: {JSON.stringify(data)}</p>;
-    case "task_tracker_base":
-      return <p>Task Tracker Base data: {JSON.stringify(data)}</p>;
-    default:
-      return <p>Модуль не реализован.</p>;
-  }
 };
 
 export default DynamicTabs;

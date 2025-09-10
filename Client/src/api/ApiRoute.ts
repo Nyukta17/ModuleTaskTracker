@@ -11,7 +11,10 @@ class ApiRoute{
         return this.ApiBase+"/company/GetCompanyModules";
     }
     getAllNews():string{
-        return this.ApiBase+"/news"
+        return this.ApiBase+"/news/getCompanyNews"
+    }
+    createNews():string{
+        return this.ApiBase + "/news/createNews";
     }
 }
 

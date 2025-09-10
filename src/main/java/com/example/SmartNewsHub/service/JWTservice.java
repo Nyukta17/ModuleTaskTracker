@@ -17,9 +17,10 @@ public class JWTservice {
     private final long expirationTime = 3600000;
 
 
-    public String generateToken(String company, String role){
+    public String generateToken(String company, String role, Long id){
         return Jwts.builder()
                 .setSubject(company)
+                .claim("companyId",id)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
@@ -58,5 +59,13 @@ public class JWTservice {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.get("role", String.class);
+    }
+    public  Long getId(String token){
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("companyId", Long.class);
     }
 }
