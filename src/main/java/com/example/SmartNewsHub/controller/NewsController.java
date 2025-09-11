@@ -38,6 +38,7 @@ public class NewsController {
         if(autoHeader!=null&&autoHeader.startsWith("Bearer ")){
             String token = autoHeader.substring(7);
             if(jwTservice.validateToken(token)){
+                dto.setCompanyId(jwTservice.getId(token));
                 newsService.createNews(dto);
                 return ResponseEntity.ok("Новость сохранена!");
             }

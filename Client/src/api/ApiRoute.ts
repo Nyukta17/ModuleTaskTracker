@@ -16,6 +16,12 @@ class ApiRoute{
     createNews():string{
         return this.ApiBase + "/news/createNews";
     }
+    changeNews(id:number):string{
+        return this.ApiBase+`/news/changeNews/${id}`
+    }
+    deleteNews(id:number):string{
+        return this.ApiBase+`/news/deleteNews/${id}`
+    }
 }
 
 export default ApiRoute;

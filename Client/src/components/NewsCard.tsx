@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
-
+import ApiRoute from "../api/ApiRoute";
+const api = new ApiRoute;
 interface NewsCardProps {
   id: number;
   title: string;
@@ -38,11 +39,9 @@ const NewsCard: React.FC<NewsCardProps> = ({
     }
   };
 
-  const apiBaseUrl = "http://localhost:8080/news"; 
-
   const deleteNews = () => {
     const token = localStorage.getItem("jwtToken");
-    fetch(`${apiBaseUrl}/deleteNews/${id}`, {
+    fetch(api.deleteNews(id), {
       method: "DELETE",
       headers: {
         Authorization: "Bearer " + token,
@@ -57,7 +56,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   const saveEdit = () => {
     const token = localStorage.getItem("jwtToken");
-    fetch(`${apiBaseUrl}/changeNews/${id}`, {
+    fetch(api.changeNews(id), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

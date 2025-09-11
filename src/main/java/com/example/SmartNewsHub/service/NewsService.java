@@ -32,7 +32,8 @@ public class NewsService {
         news.setTitle(dto.getTitle());
         news.setContent(dto.getContent());
         news.setCompany(company);
-        news.setCreatedBy(null);
+        news.setCreatedBy(null);// не забудь изменить логику подстановки юзера,в бд на ноуте отключен проверка на нулл- это чтобы вернуть ALTER TABLE news_module ALTER COLUMN created_by_user_id SET NOT NULL;
+
         return newsRepository.save(news);
     }
     public void deleteNews(Long id){
