@@ -1,7 +1,7 @@
 package com.example.SmartNewsHub.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name="EventModule")
@@ -13,7 +13,7 @@ public class EventModule {
     @Column(length = 50)
     private String text;
 
-    private LocalDateTime dateTime;
+    private LocalDate dateTime;
 
     @ManyToOne
     @JoinColumn(name="user_id", nullable = true)
@@ -35,11 +35,11 @@ public class EventModule {
         this.text = text;
     }
 
-    public LocalDateTime getDateTime() {
+    public LocalDate getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(LocalDate dateTime) {
         this.dateTime = dateTime;
     }
 

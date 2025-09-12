@@ -7,12 +7,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface EventRepository extends JpaRepository<EventModule,Long> {
-    List<EventModule> findByDateTimeBetween(LocalDateTime start, LocalDateTime end);
+    List<EventModule> findByDateTimeBetween(LocalDate start, LocalDate end);
 
     @Query("SELECT e FROM EventModule e WHERE e.user.company.id = :companyId")
     List<EventModule> findByCompanyId(@Param("companyId") Long companyId);

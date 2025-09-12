@@ -3,38 +3,91 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import type { EventContentArg } from '@fullcalendar/core';
+import ApiRoute from '../../api/ApiRoute';
+
+const api = new ApiRoute();
 
 interface BackendEvent {
   id: string;
   title: string;
-  date: string;
+  start: string; // обязателен start для FullCalendar
+  // можете добавить end?: string; если нужно
 }
 
-const сalendarComponent: React.FC = () => {
+const CalendarComponent: React.FC = () => {
   const [events, setEvents] = useState<BackendEvent[]>([]);
 
-  // Фейковая загрузка событий с бекенда
   const fetchEvents = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setEvents([
-      { id: '1', title: 'Событие 1', date: '2025-09-15' },
-      { id: '2', title: 'Событие 2', date: '2025-09-20' },
-    ]);
+    try {
+      const response = await fetch(api.getEvent(), {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('jwtToken'),
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const text = await response.text();
+
+      if (!response.ok) {
+        throw new Error(text || 'Ошибка загрузки событий');
+      }
+
+      const data = JSON.parse(text);
+
+      // Преобразуем данные под формат FullCalendar
+      const mappedEvents = data.map((event: any) => ({
+        id: event.id,
+        title: event.text || event.title,
+        start: event.dateTime || event.date, // дата в формате ISO 8601
+      }));
+
+      setEvents(mappedEvents);
+    } catch (error: any) {
+      alert(error.message);
+    }
   };
 
   useEffect(() => {
     fetchEvents();
   }, []);
 
-  // Обработка клика по дате
+ const createEvent = async (newEvent: { dateTime: string; text: string }) => {
+  try {
+    const response = await fetch(api.setEvent(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('jwtToken'),
+      },
+      body: JSON.stringify(newEvent),
+    });
+
+    if (!response.ok) {
+      // попытаемся получить текст ошибки
+      const errorText = await response.text();
+      throw new Error(errorText || 'Ошибка при создании события');
+    }
+
+    // Если сервер возвращает просто OK, не пытаемся парсить JSON
+    // Перезапрашиваем список событий, чтобы обновить календарь
+    await fetchEvents();
+  } catch (error: any) {
+    alert(error.message);
+  }
+};
+
+
   const handleDateClick = (arg: { dateStr: string }) => {
-    alert(`Вы выбрали дату: ${arg.dateStr}`);
+    const text = prompt('Введите название события');
+    if (text) {
+      createEvent({ text, dateTime: arg.dateStr });
+    }
   };
 
-  // Отрисовка события (можно кастомизировать)
   const renderEventContent = (eventInfo: EventContentArg) => (
     <>
-      <b>{eventInfo.timeText}</b>
+      <b>{eventInfo.timeText}</b>&nbsp;
       <i>{eventInfo.event.title}</i>
     </>
   );
@@ -51,4 +104,4 @@ const сalendarComponent: React.FC = () => {
   );
 };
 
-export default сalendarComponent;
+export default CalendarComponent;

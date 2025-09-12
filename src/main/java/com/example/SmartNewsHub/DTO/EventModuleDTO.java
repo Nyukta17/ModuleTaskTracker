@@ -1,11 +1,11 @@
 package com.example.SmartNewsHub.DTO;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class EventModuleDTO {
     private Long id;
     private String text;
-    private LocalDateTime dateTime;
+    private LocalDate dateTime;
     private Long user_id;
 
     public Long getId() {
@@ -24,11 +24,11 @@ public class EventModuleDTO {
         this.text = text;
     }
 
-    public LocalDateTime getDateTime() {
+    public LocalDate getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(LocalDate dateTime) {
         this.dateTime = dateTime;
     }
 

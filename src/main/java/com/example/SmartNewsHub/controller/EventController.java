@@ -23,7 +23,7 @@ public class EventController {
         this.jwTservice = jwTservice;
     }
     @PostMapping("/setDate")
-    public ResponseEntity<String> setEvent(@RequestHeader String authToken,@RequestBody EventModuleDTO dto){
+    public ResponseEntity<String> setEvent(@RequestHeader("Authorization") String authToken,@RequestBody EventModuleDTO dto){
         if(authToken !=null&&authToken.startsWith("Bearer ")){
             String token = authToken.substring(7);
             if(jwTservice.validateToken(token)){
@@ -34,8 +34,16 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or missing token");
     }
     @GetMapping("/getDate")
-    public List<EventModuleDTO> getEvent(){
-        return eventService.getAllEvents();
+    public ResponseEntity<List<EventModuleDTO>> getEvent(@RequestHeader("Authorization") String authToken){
+        if(authToken !=null&&authToken.startsWith("Bearer ")){
+            String token = authToken.substring(7);
+            if(jwTservice.validateToken(token)){
+                List<EventModuleDTO> events = eventService.getAllEvents();
+                return ResponseEntity.ok(events);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+
     }
     public List<EventModuleDTO> getEventsByCompany(@RequestParam Long companyId) {
         return eventService.getEventsByCompany(companyId);

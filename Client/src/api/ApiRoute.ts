@@ -22,6 +22,12 @@ class ApiRoute{
     deleteNews(id:number):string{
         return this.ApiBase+`/news/deleteNews/${id}`
     }
+    getEvent():string{
+        return this.ApiBase+'/event/getDate'
+    }
+    setEvent():string{
+        return this.ApiBase+'/event/setDate'
+    }
 }
 
 export default ApiRoute;
