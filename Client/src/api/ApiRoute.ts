@@ -7,6 +7,15 @@ class ApiRoute{
     SingUp():string{
         return this.ApiBase+"/company/SingUp";
     }
+    CreateUrlForRegUsers():string{
+        return this.ApiBase+"/company/CreateUrlForRegUsers"
+    }
+    CheckValidTokenForEmployee():string{
+        return this.ApiBase +"/employee/validTokenReg"
+    }
+    CreateEmployee():string{
+        return this.ApiBase +"/employee/createEmployee";
+    }
     getCompanyModules():string{
         return this.ApiBase+"/company/GetCompanyModules";
     }

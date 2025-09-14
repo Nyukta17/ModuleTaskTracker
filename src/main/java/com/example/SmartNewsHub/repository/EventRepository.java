@@ -13,7 +13,7 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<EventModule,Long> {
     List<EventModule> findByDateTimeBetween(LocalDate start, LocalDate end);
 
-    @Query("SELECT e FROM EventModule e WHERE e.user.company.id = :companyId")
+    @Query("SELECT e FROM EventModule e WHERE e.employee.company.id = :companyId")
     List<EventModule> findByCompanyId(@Param("companyId") Long companyId);
 
     List<EventModule> findAll();

@@ -1,7 +1,5 @@
 package com.example.SmartNewsHub.model;
 
-import com.example.SmartNewsHub.model.Company;
-import com.example.SmartNewsHub.model.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
@@ -39,11 +37,11 @@ public class NewsModule {
 
     @ManyToOne
     @JoinColumn(name = "created_by_user_id")
-    private User createdBy;
+    private Employee createdBy;
 
     public NewsModule() {}
 
-    public NewsModule(String title, String content, java.time.LocalDateTime createdAt, Company company, User createdBy) {
+    public NewsModule(String title, String content, java.time.LocalDateTime createdAt, Company company, Employee createdBy) {
         this.title = title;
         this.content = content;
         this.createdAt = createdAt;
@@ -93,11 +91,11 @@ public class NewsModule {
         this.company = company;
     }
 
-    public User getCreatedBy() {
+    public Employee getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Employee createdBy) {
         this.createdBy = createdBy;
     }
 }

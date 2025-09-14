@@ -27,6 +27,17 @@ public class JWTservice {
                 .signWith(secretKey, SignatureAlgorithm.HS256) // Используйте SignatureAlgorithm из JJWT
                 .compact();
     }
+    public String generateRegistrationToken(Long companyId) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .setSubject("user_registration")
+                .setExpiration(new Date(now + expirationTime))
+                .claim("forUserReg", true)
+                .claim("companyId", companyId)
+                .setIssuedAt(new Date(now))
+                .signWith(secretKey)
+                .compact();
+    }
 
 
     public boolean validateToken(String token){

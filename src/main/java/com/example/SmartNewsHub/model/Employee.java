@@ -2,9 +2,12 @@ package com.example.SmartNewsHub.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "employee")
+public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +23,9 @@ public class User {
     private String middleName;
 
     @Column(nullable = false)
+    private LocalDate birthDay;
+
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)
@@ -32,9 +38,9 @@ public class User {
     @Column(nullable = false)
     private String role;
 
-    public User() {}
+    public Employee() {}
 
-    public User(String lastName, String firstName, String middleName, String password, String email, String role) {
+    public Employee(String lastName, String firstName, String middleName, String password, String email, String role) {
         this.lastName = lastName;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -97,5 +103,21 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public LocalDate getBirthDay() {
+        return birthDay;
+    }
+
+    public void setBirthDay(LocalDate birthDay) {
+        this.birthDay = birthDay;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 }

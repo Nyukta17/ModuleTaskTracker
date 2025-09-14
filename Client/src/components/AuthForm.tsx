@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
 import { useNavigate } from 'react-router-dom';
+import '../style/authoForm.css';
 
 const api = new ApiRoute();
 
@@ -14,10 +15,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
 
   return (
     <>
-      {isLog ? <SignIn onLogin={onLogin} /> : <SignUp />}
-      <Button onClick={() => setIsLog(!isLog)}>
-        {isLog ? "Перейти к регистрации" : "Перейти ко входу"}
-      </Button>
+      <div className="auth-container">
+        {isLog ? <SignIn onLogin={onLogin} /> : <SignUp />}
+      </div>
+      <div style={{ textAlign: 'center', marginTop: '15px' }}>
+        <Button variant="secondary" onClick={() => setIsLog(!isLog)}>
+          {isLog ? "Перейти к регистрации" : "Перейти ко входу"}
+        </Button>
+      </div>
     </>
   );
 };
@@ -43,9 +48,7 @@ const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
 
       const response = await fetch(api.SingIn(), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
       });
 
@@ -59,7 +62,7 @@ const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
 
       if (token) {
         localStorage.setItem("jwtToken", token);
-        onLogin(token);  // сообщаем родителю о новом токене
+        onLogin(token);
         navigate("/hublist");
       } else {
         setError("Токен не получен");
@@ -78,15 +81,17 @@ const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
         name="CompanyOrEmail"
         value={companyOrEmail}
         onChange={(e) => setCompanyOrEmail(e.target.value)}
+        placeholder="Компания или Email"
       />
       <input
         type="password"
         name="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        placeholder="Пароль"
       />
       <Button onClick={Authentication}>Войти</Button>
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      {error && <div className="error-message">{error}</div>}
     </>
   );
 };
@@ -141,18 +146,20 @@ const SignUp: React.FC = () => {
 
   return (
     <>
-      <h1>Окно регистрации</h1>
+      <h1>Регистрации</h1>
       <input
         type="text"
         name="company"
         value={company}
         onChange={(e) => setCompany(e.target.value)}
+        placeholder="Компания"
       />
       <input
         type="text"
         name="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
       />
       <input
         type="password"
@@ -166,9 +173,9 @@ const SignUp: React.FC = () => {
         value={confirmPassword}
         onChange={(e) => handleConfirmPasswordChange(e.target.value)}
       />
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      {error && <div className="error-message">{error}</div>}
       <Button onClick={Registration}>Зарегистрироваться</Button>
-      {message && <div>{message}</div>}
+      {message && <div className="message">{message}</div>}
     </>
   );
 };

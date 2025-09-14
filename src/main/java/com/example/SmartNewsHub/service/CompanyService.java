@@ -34,7 +34,7 @@ public class CompanyService {
         company.setEmail(dto.getEmail());
         company.setCompany(dto.getCompany());
         company.setPassword(passwordEncoder.encode(dto.getPassword()));
-        company.setRole("lvl1");
+        company.setRole("Boss");
         return companyRepository.save(company);
     }
     public Company SingIn(CompanyDTO dto) {

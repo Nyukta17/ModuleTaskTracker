@@ -3,33 +3,32 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import AuthForm from './components/AuthForm';
 import HubList from './components/HubList';
 import Workspace from './components/WorkSpace';
+import RegistrationMessage from './components/RegistrationMessage';
 
 function App() {
-  // Состояния приложения
+  
   const [token, setToken] = useState(() => localStorage.getItem('jwtToken') || '');
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!token);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
-  // Обработчик успешного логина
+  
   const handleLogin = (newToken: string) => {
     localStorage.setItem('jwtToken', newToken);
     setToken(newToken);
     setIsAuthenticated(true);
-    setRedirectPath('/hublist');  // Запускаем навигацию через Navigate
+    setRedirectPath('/hublist');  
   };
 
-  // Обработчик выбора проекта
   const handleSelectProject = (project: any) => {
     setSelectedProject(project);
-    setRedirectPath(`/hub/${project.id}`); // Навигация через состояние
+    setRedirectPath(`/hub/${project.id}`);
   };
 
   return (
     <Router>
-      {/* Навигация через Navigate, если redirectPath установлен */}
       {redirectPath && <Navigate to={redirectPath} replace />}
-      
+
       <Routes>
         <Route
           path="/"
@@ -58,6 +57,7 @@ function App() {
             )
           }
         />
+        <Route path="/register" element={<RegistrationMessage />} />
       </Routes>
     </Router>
   );

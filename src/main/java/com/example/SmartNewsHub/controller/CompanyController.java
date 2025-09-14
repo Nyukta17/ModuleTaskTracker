@@ -5,6 +5,7 @@ import com.example.SmartNewsHub.DTO.CompanyDTO;
 import com.example.SmartNewsHub.model.Company;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.CompanyService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,5 +59,25 @@ public class CompanyController {
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
+    @GetMapping("/CreateUrlForRegUsers")
+    public ResponseEntity<String> createUrlForRegUsers(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                if (jwTservice.validateToken(token)) {
+                    Long companyId = jwTservice.getId(token);
+                    if (companyId != null) {
+                        String registrationToken = jwTservice.generateRegistrationToken(companyId);
+                        String registrationUrl = "http://localhost:5173/register?token=" + registrationToken;
+                        return ResponseEntity.ok(registrationUrl);
+                    }
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid company ID");
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization header missing or invalid");
     }
 }

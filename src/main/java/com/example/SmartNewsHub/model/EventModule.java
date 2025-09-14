@@ -17,7 +17,7 @@ public class EventModule {
 
     @ManyToOne
     @JoinColumn(name="user_id", nullable = true)
-    private User user;
+    private Employee employee;
 
     public Long getId() {
         return id;
@@ -43,11 +43,11 @@ public class EventModule {
         this.dateTime = dateTime;
     }
 
-    public User getUser() {
-        return user;
+    public Employee getUser() {
+        return employee;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(Employee employee) {
+        this.employee = employee;
     }
 }
