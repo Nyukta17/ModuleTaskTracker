@@ -1,0 +1,211 @@
+import React, { useState, useRef } from "react";
+import "./../../../style/timeboard.css";
+
+interface Marker {
+  id: number;
+  startHour: number;
+  durationHours: number;
+  verticalOffset: number;
+}
+
+const HOURS = Array.from({ length: 10 }, (_, i) => i + 8);
+
+const TimeBoard: React.FC = () => {
+  const [markers, setMarkers] = useState<Marker[]>([]);
+  const [resizeId, setResizeId] = useState<number | null>(null);
+  const [dragId, setDragId] = useState<number | null>(null);
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [startWidth, setStartWidth] = useState<number>(0);
+  const [startVerticalOffset, setStartVerticalOffset] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const boardRef = useRef<HTMLDivElement | null>(null);
+
+  const computeVerticalOffset = (newMarker: Marker) => {
+    const markerHeight = 50;
+    const gap = 6;
+    const overlappingMarkers = markers.filter((m) => {
+      const mLeft = m.startHour;
+      const mRight = m.startHour + m.durationHours;
+      const newLeft = newMarker.startHour;
+      const newRight = newMarker.startHour + newMarker.durationHours;
+      return !(mRight <= newLeft || mLeft >= newRight);
+    });
+    let offset = 0;
+    while (
+      overlappingMarkers.some(
+        (m) =>
+          Math.abs((m.verticalOffset || 0) - offset) < markerHeight + gap
+      )
+    ) {
+      offset += markerHeight + gap;
+    }
+    return offset;
+  };
+
+  // Создавать маркер только если не происходит drag/resize
+  const onBoardClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      return;
+    }
+    if (!boardRef.current) return;
+    const rect = boardRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const boardWidth = rect.width;
+    const columnWidth = boardWidth / HOURS.length;
+    const hourClicked = Math.floor(clickX / columnWidth) + 8;
+
+    let newMarker: Marker = {
+      id: Date.now(),
+      startHour: Math.min(Math.max(hourClicked, 8), 17),
+      durationHours: 1,
+      verticalOffset: 0,
+    };
+
+    newMarker.verticalOffset = computeVerticalOffset(newMarker);
+
+    setMarkers((prev) => [...prev, newMarker]);
+  };
+
+  const onResizeMouseDown = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    setResizeId(id);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    const marker = markers.find((m) => m.id === id);
+    setStartWidth(marker ? marker.durationHours : 0);
+  };
+
+  const onDragMouseDown = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragId(id);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    const marker = markers.find((m) => m.id === id);
+    setStartVerticalOffset(marker ? marker.verticalOffset : 0);
+    setStartWidth(marker ? marker.durationHours : 0);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    const board = boardRef.current;
+    if (!board) return;
+    const boardWidth = board.getBoundingClientRect().width;
+    const columnWidth = boardWidth / HOURS.length;
+
+    if (resizeId !== null && dragStartPos) {
+      const deltaX = e.clientX - dragStartPos.x;
+      let newDuration = Math.round(startWidth + deltaX / columnWidth);
+      newDuration = Math.max(newDuration, 1);
+
+      const marker = markers.find((m) => m.id === resizeId);
+      if (!marker) return;
+
+      if (marker.startHour + newDuration > 17) {
+        newDuration = 17 - marker.startHour;
+      }
+
+      setMarkers((prev) =>
+        prev.map((m) =>
+          m.id === resizeId ? { ...m, durationHours: newDuration } : m
+        )
+      );
+    } else if (dragId !== null && dragStartPos) {
+      const deltaY = e.clientY - dragStartPos.y;
+
+      let newOffset = startVerticalOffset + deltaY;
+      newOffset = Math.max(0, newOffset);
+
+      const marker = markers.find((m) => m.id === dragId);
+      if (!marker) return;
+
+      const overlappingMarkers = markers.filter((m) => {
+        if (m.id === dragId) return false;
+        const mLeft = m.startHour;
+        const mRight = m.startHour + m.durationHours;
+        const dragMarkerLeft = marker.startHour;
+        const dragMarkerRight = marker.startHour + marker.durationHours;
+        return !(mRight <= dragMarkerLeft || mLeft >= dragMarkerRight);
+      });
+
+      const markerHeight = 50;
+      const gap = 6;
+      while (
+        overlappingMarkers.some(
+          (m) =>
+            Math.abs((m.verticalOffset || 0) - newOffset) < markerHeight + gap
+        )
+      ) {
+        newOffset += markerHeight + gap;
+      }
+
+      setMarkers((prev) =>
+        prev.map((m) => (m.id === dragId ? { ...m, verticalOffset: newOffset } : m))
+      );
+    }
+  };
+
+  const onMouseUp = () => {
+    setResizeId(null);
+    setDragId(null);
+    setDragStartPos(null);
+    setTimeout(() => setIsDragging(false), 0);
+  };
+
+  const clearMarkers = () => {
+    setMarkers([]);
+  };
+
+  return (
+    <div className="timeboard-wrapper">
+      <div className="timeboard-clear-button-container">
+        <button className="timeboard-clear-button" onClick={clearMarkers}>
+          Очистить
+        </button>
+      </div>
+
+      <div
+        className="timeboard"
+        ref={boardRef}
+        onClick={onBoardClick}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        <div className="timeboard-header">
+          {HOURS.map((hour) => (
+            <div key={hour} className="timeboard-column">
+              {hour}:00
+            </div>
+          ))}
+        </div>
+
+        <div className="timeboard-panel">
+          {markers.map((marker) => (
+            <div
+              key={marker.id}
+              className={`timeboard-marker ${
+                resizeId === marker.id || dragId === marker.id ? "timeboard-marker-active" : ""
+              }`}
+              style={{
+                left: (marker.startHour - 8) * (100 / HOURS.length) + "%",
+                width: (marker.durationHours * 100) / HOURS.length + "%",
+                top: marker.verticalOffset,
+              }}
+              onMouseDown={(e) => onDragMouseDown(e, marker.id)}
+            >
+              <div className="timeboard-marker-text">
+                {marker.startHour}:00 - {marker.startHour + marker.durationHours}:00
+              </div>
+              <div
+                className="timeboard-marker-resize-handle"
+                onMouseDown={(e) => onResizeMouseDown(e, marker.id)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TimeBoard;

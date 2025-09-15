@@ -3,6 +3,7 @@ import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
 import CompanyNewsComponent from "./Modules/CompanyNewsComponent";
 import CalendarComponent from "./Modules/CalendarComponent";
+import TimeTrackerComponent from "./Modules/TimeTrackerComponent";
 
 
 
@@ -41,8 +42,8 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
     switch (moduleId) {
       // case "analytics":
       //   return <AnalyticsComponent />;
-      // case "timeTracker":
-      //   return <TimeTrackerComponent />;
+      case "timeTracker":
+        return <TimeTrackerComponent />;
       case "calendar":
         return <CalendarComponent />;
       case "companyNews":

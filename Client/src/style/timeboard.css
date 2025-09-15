@@ -1,0 +1,88 @@
+.timeboard-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.timeboard-clear-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.timeboard-clear-button {
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f8f9fa;
+}
+
+.timeboard {
+  user-select: none;
+  width: 100%;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.timeboard-header {
+  display: flex;
+  border-bottom: 1px solid gray;
+  background-color: #f0f0f0;
+}
+
+.timeboard-column {
+  flex: 1;
+  padding: 5px;
+  text-align: center;
+  border-left: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.timeboard-panel {
+  position: relative;
+  height: 360px;
+  background-color: #fafafa;
+  overflow: auto;
+}
+
+.timeboard-marker {
+  position: absolute;
+  height: 50px;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  box-sizing: border-box;
+  user-select: none;
+  z-index: 1;
+  transition: box-shadow 0.2s ease;
+}
+
+.timeboard-marker-active,
+.timeboard-marker:hover {
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.7);
+  z-index: 10;
+}
+
+.timeboard-marker-text {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeboard-marker-resize-handle {
+  width: 10px;
+  height: 100%;
+  cursor: ew-resize;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  flex-shrink: 0;
+}
