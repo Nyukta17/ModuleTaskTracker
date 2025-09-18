@@ -4,6 +4,7 @@ import Tab from "react-bootstrap/Tab";
 import CompanyNewsComponent from "./Modules/CompanyNewsComponent";
 import CalendarComponent from "./Modules/CalendarComponent";
 import TimeTrackerComponent from "./Modules/TimeTrackerComponent";
+import TaskTrackerBaseComponent from "./Modules/TaskTrackerBaseComponent";
 
 
 
@@ -48,8 +49,8 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
         return <CalendarComponent />;
       case "companyNews":
         return <CompanyNewsComponent />;
-      // case "task_tracker_base":
-      //   return <TaskTrackerBaseComponent />;
+      case "task_tracker_base":
+        return <TaskTrackerBaseComponent />;
       default:
         return <p>Модуль не реализован.</p>;
     }
