@@ -31,7 +31,7 @@ public class CompanyController {
     @PostMapping("/SingIn")
     public ResponseEntity<String> SingIn(@RequestBody CompanyDTO dto){
         Company company = companyService.SingIn(dto);
-        String token = jwTservice.generateToken(dto.getCompany(),"lvl1",company.getId());
+        String token = jwTservice.generateToken(dto.getCompany(),"Boss",company.getId());
         return ResponseEntity.ok(token);
     }
     @PostMapping("/SaveCompanyModules")

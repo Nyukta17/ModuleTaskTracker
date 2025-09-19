@@ -37,6 +37,9 @@ class ApiRoute{
     setEvent():string{
         return this.ApiBase+'/event/setDate'
     }
+    setTask():string{
+        return this.ApiBase+'/tasks/createTask'
+    }
 }
 
 export default ApiRoute;

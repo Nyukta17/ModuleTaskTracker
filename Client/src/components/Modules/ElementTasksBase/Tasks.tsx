@@ -1,21 +1,18 @@
 import React, { useState } from "react";
 import { Form, Button, Alert, Spinner } from "react-bootstrap";
+import ApiRoute from "../../../api/ApiRoute";
+
+const api = new ApiRoute();
 
 type Task = {
   id?: number;
   title: string;
   description: string;
-  assignedUser: string;
-  status: "NEW" | "IN_PROGRESS" | "DONE";
+  assignedEmployee: string;
+  status: "NEW" | "IN_PROGRESS" | "TESTING" | "DONE";
+  priority?: "LOW" | "MEDIUM" | "HIGH";
+  dueDate?: string; // ISO 8601 DATETIME string
 };
-
-const fakeApiCall = (task: Task) =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      console.log("Fake API saved task:", task);
-      resolve(task);
-    }, 1000);
-  });
 
 const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
   initialTask,
@@ -25,8 +22,10 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
     initialTask || {
       title: "",
       description: "",
-      assignedUser: "",
+      assignedEmployee: "",
       status: "NEW",
+      priority: "MEDIUM",
+      dueDate: "",
     }
   );
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -36,7 +35,8 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
   const validate = (): boolean => {
     const errs: { [key: string]: string } = {};
     if (!task.title.trim()) errs.title = "Название обязательно";
-    if (!task.assignedUser.trim()) errs.assignedUser = "Исполнитель обязателен";
+    if (!task.assignedEmployee.trim()) errs.assignedEmployee = "Исполнитель обязателен";
+    // по желанию добавьте валидацию priority и dueDate
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -44,7 +44,15 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setTask({ ...task, [e.target.name]: e.target.value });
+    let value: string | undefined = e.target.value;
+
+    if (e.target.name === "dueDate" && value) {
+      // преобразуем дату из YYYY-MM-DD в ISO 8601 с временем
+      const date = new Date(value);
+      value = date.toISOString(); // "2025-09-19T00:00:00.000Z"
+    }
+
+    setTask({ ...task, [e.target.name]: value });
     setErrors({ ...errors, [e.target.name]: "" });
     setSubmitSuccess(false);
   };
@@ -54,10 +62,24 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
     if (!validate()) return;
     setSubmitting(true);
     setSubmitSuccess(false);
-    await fakeApiCall(task);
-    setSubmitting(false);
-    setSubmitSuccess(true);
-    if (onSave) onSave();
+
+    try {
+      await fetch(api.setTask(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("jwtToken"),
+        },
+        body: JSON.stringify(task),
+      });
+
+      setSubmitSuccess(true);
+      if (onSave) onSave();
+    } catch (error) {
+      console.error("Ошибка при сохранении задачи:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -91,21 +113,21 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
         />
       </Form.Group>
 
-      <Form.Group controlId="formAssignedUser" className="mb-3">
+      <Form.Group controlId="formAssignedEmployee" className="mb-3">
         <Form.Label>Исполнитель</Form.Label>
         <Form.Control
-          name="assignedUser"
+          name="assignedEmployee"
           type="text"
-          value={task.assignedUser}
+          value={task.assignedEmployee}
           onChange={handleChange}
-          isInvalid={!!errors.assignedUser}
+          isInvalid={!!errors.assignedEmployee}
           disabled={submitting}
           placeholder="Имя исполнителя"
         />
-        <Form.Control.Feedback type="invalid">{errors.assignedUser}</Form.Control.Feedback>
+        <Form.Control.Feedback type="invalid">{errors.assignedEmployee}</Form.Control.Feedback>
       </Form.Group>
 
-      <Form.Group controlId="formStatus" className="mb-4">
+      <Form.Group controlId="formStatus" className="mb-3">
         <Form.Label>Статус</Form.Label>
         <Form.Select
           name="status"
@@ -115,8 +137,34 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
         >
           <option value="NEW">Новая</option>
           <option value="IN_PROGRESS">В работе</option>
+          <option value="TESTING">В тестировании</option>
           <option value="DONE">Выполнена</option>
         </Form.Select>
+      </Form.Group>
+
+      <Form.Group controlId="formPriority" className="mb-3">
+        <Form.Label>Приоритет</Form.Label>
+        <Form.Select
+          name="priority"
+          value={task.priority}
+          onChange={handleChange}
+          disabled={submitting}
+        >
+          <option value="LOW">Низкий</option>
+          <option value="MEDIUM">Средний</option>
+          <option value="HIGH">Высокий</option>
+        </Form.Select>
+      </Form.Group>
+
+      <Form.Group controlId="formDueDate" className="mb-3">
+        <Form.Label>Срок выполнения</Form.Label>
+        <Form.Control
+          name="dueDate"
+          type="date"
+          value={task.dueDate ? task.dueDate.substring(0, 10) : ""}
+          onChange={handleChange}
+          disabled={submitting}
+        />
       </Form.Group>
 
       <Button variant="primary" type="submit" disabled={submitting}>

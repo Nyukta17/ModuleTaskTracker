@@ -10,7 +10,7 @@ public class Company_Module {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "company_id")
     private Company company;
 
     @Column(nullable = false)
