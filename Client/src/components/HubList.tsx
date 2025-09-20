@@ -17,6 +17,8 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch(api.getCompanyModules(), {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     })
@@ -64,7 +66,10 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
           <h2>Выберите проект</h2>
           <ListGroup>
             {projects.map((proj) => (
-              <ListGroup.Item key={proj.id} className="d-flex justify-content-between align-items-center">
+              <ListGroup.Item
+                key={proj.id}
+                className="d-flex justify-content-between align-items-center"
+              >
                 <div>Проект {proj.company.company}</div>
                 <Button variant="primary" size="sm" onClick={() => onSelectProject(proj)}>
                   Выбрать

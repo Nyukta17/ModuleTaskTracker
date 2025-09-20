@@ -65,7 +65,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ module }) => {
         onCreateInviteLink={createInviteLink}
         loading={loading}
       />
-      <DynamicTabs data={dataForTabs} />
+      <DynamicTabs data={dataForTabs} projectHubId={module.id.toString()} />
       
       {error && <div style={{ color: 'red', padding: '10px 20px' }}>{error}</div>}
 

@@ -6,9 +6,6 @@ import CalendarComponent from "./Modules/CalendarComponent";
 import TimeTrackerComponent from "./Modules/TimeTrackerComponent";
 import TaskTrackerBaseComponent from "./Modules/TaskTrackerBaseComponent";
 
-
-
-
 interface ModuleDTO {
   id: string;
   name: string;
@@ -16,6 +13,7 @@ interface ModuleDTO {
 
 interface Props {
   data: Record<string, boolean>;
+  projectHubId: string; // добавляем пропс с id хаба
 }
 
 const moduleNamesMap: Record<string, string> = {
@@ -26,7 +24,7 @@ const moduleNamesMap: Record<string, string> = {
   task_tracker_base: "Task Tracker Base",
 };
 
-const DynamicTabs: React.FC<Props> = ({ data }) => {
+const DynamicTabs: React.FC<Props> = ({ data, projectHubId }) => {
   let modules: ModuleDTO[] = Object.entries(data)
     .filter(([key, value]) => value && moduleNamesMap[key])
     .map(([key]) => ({ id: key, name: moduleNamesMap[key] }));
@@ -50,7 +48,7 @@ const DynamicTabs: React.FC<Props> = ({ data }) => {
       case "companyNews":
         return <CompanyNewsComponent />;
       case "task_tracker_base":
-        return <TaskTrackerBaseComponent />;
+        return <TaskTrackerBaseComponent projectHubId={projectHubId} />;
       default:
         return <p>Модуль не реализован.</p>;
     }
