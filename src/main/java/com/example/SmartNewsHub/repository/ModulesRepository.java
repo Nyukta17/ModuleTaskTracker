@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface ModulesRepository extends JpaRepository<Company_Module,Long>{
     List<Company_Module> findByCompany(Company Company);
+    List<Company_Module> findByCompanyId(Long id);
 }

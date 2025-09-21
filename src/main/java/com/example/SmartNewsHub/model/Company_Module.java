@@ -3,6 +3,7 @@ package com.example.SmartNewsHub.model;
 import jakarta.persistence.*;
 
 @Entity
+
 @Table(name="Modules_Company")
 public class Company_Module {
     @Id
