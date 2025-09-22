@@ -1,6 +1,9 @@
 package com.example.SmartNewsHub.controller;
 
+import com.example.SmartNewsHub.DTO.StatusDTO;
 import com.example.SmartNewsHub.DTO.TaskDTO;
+import com.example.SmartNewsHub.DTO.TaskWithAssigneeDTO;
+import com.example.SmartNewsHub.Enum.TaskStatus;
 import com.example.SmartNewsHub.model.Task;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.TasksService;
@@ -48,11 +51,54 @@ public class TasksController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             if (jwTservice.validateToken(token)) {
-                List<Task> tasks = tasksService.getAllTasks(projectHubId);
+                List<TaskWithAssigneeDTO> tasks = tasksService.getAllTasks(projectHubId);
                 return ResponseEntity.ok(tasks);
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или отсутствующий токен");
+    }
+
+    @PutMapping("/{id_task}/statusUpdate")
+    public ResponseEntity<String> updateStatusTask(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("id_task") Long id_task,
+            @RequestBody StatusDTO statusDTO) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Отсутствует или неверный токен");
+        }
+
+        String token = authHeader.substring(7);
+        if (!jwTservice.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или просроченный токен");
+        }
+
+        TaskStatus status = statusDTO.getStatus();
+        String result = tasksService.updateStatusTask(id_task, status);
+
+        return ResponseEntity.ok(result);
+    }
+    @GetMapping("{id}/myTasks")
+    public ResponseEntity<?> getMyTasks(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("id") Long id) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Отсутствует или неверный токен");
+        }
+
+        String token = authHeader.substring(7);
+
+        if (!jwTservice.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или просроченный токен");
+        }
+
+        List<TaskDTO> tasks = tasksService.findTasksByUserId(id);
+
+        if (tasks.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(tasks);
     }
 
 

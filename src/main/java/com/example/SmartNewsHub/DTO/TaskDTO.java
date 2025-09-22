@@ -21,6 +21,21 @@ public class TaskDTO {
     private String createdByManager;
     private Long projectHub;
 
+    public TaskDTO(Long id, String title, String description, TaskStatus status,
+                   TaskPriority priority, LocalDateTime createdAt,
+                   LocalDateTime updatedAt, LocalDateTime dueDate) {
+
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.status = status;
+        this.priority = priority;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.dueDate = dueDate;
+    }
+
+
     public Long getId() {
         return id;
     }

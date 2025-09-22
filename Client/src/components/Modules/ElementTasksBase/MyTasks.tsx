@@ -1,6 +1,7 @@
 import  { useState, useEffect } from "react";
 import { Container, Table, Button, Spinner } from "react-bootstrap";
-
+import ApiRoute from "../../../api/ApiRoute";
+const api = new ApiRoute
 type Task = {
   id: string;
   title: string;
@@ -10,50 +11,102 @@ type Task = {
 
 const statuses: Task["status"][] = ["NEW", "IN_PROGRESS", "TESTING", "DONE"];
 
-
-
-// Фейковый запрос для загрузки задач текущего пользователя
-const fakeFetchMyTasks = (): Promise<Task[]> =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { id: "1", title: "Первая задача", assignedUser: "Иванов", status: "NEW" },
-        { id: "2", title: "Четвертая задача", assignedUser: "Иванов", status: "TESTING" },
-        { id: "3", title: "Пятая задача", assignedUser: "Иванов", status: "IN_PROGRESS" },
-      ]);
-    }, 1000);
-  });
-
 const MyTasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  function parseJwt(token: any) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+      .split('')
+      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+  // Загрузка задач при монтировании
   useEffect(() => {
-    fakeFetchMyTasks().then((data) => {
-      setTasks(data);
-      setLoading(false);
-    });
+    const fetchTasks = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const id = parseJwt(token).companyId;
+        const response = await fetch(api.getMyTask(id), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json"
+          }
+        });
+        if (!response.ok) {
+          throw new Error("Ошибка загрузки задач");
+        }
+        const data: Task[] = await response.json();
+        setTasks(data);
+        
+      } catch (e: any) {
+        setError(e.message || "Ошибка загрузки");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
   }, []);
 
-  const changeStatus = (taskId: string, direction: "forward" | "backward") => {
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id !== taskId) return task;
-        const currentIndex = statuses.indexOf(task.status);
-        let newIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex >= statuses.length) newIndex = statuses.length - 1;
-        return { ...task, status: statuses[newIndex] };
-      })
-    );
+  // Обновление статуса задачи и отправка на сервер
+  const changeStatus = async (taskId: string, direction: "forward" | "backward") => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const currentIndex = statuses.indexOf(task.status);
+    let newIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= statuses.length) newIndex = statuses.length - 1;
+    const newStatus = statuses[newIndex];
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(api.updateTaskStatus(taskId), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) {
+        throw new Error("Ошибка обновления статуса задачи");
+      }
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+      );
+    } catch (e: any) {
+      alert(e.message || "Ошибка обновления");
+    }
   };
+
+  if (loading) return (
+    <Container className="mt-3">
+      <Spinner animation="border" />
+    </Container>
+  );
+
+  if (error) return (
+    <Container className="mt-3">
+      <div className="text-danger">Ошибка: {error}</div>
+    </Container>
+  );
 
   return (
     <Container>
       <h3>Мои задачи</h3>
-      {loading ? (
-        <Spinner animation="border" />
-      ) : tasks.length === 0 ? (
+      {tasks.length === 0 ? (
         <p>Нет задач, назначенных на вас.</p>
       ) : (
         <Table bordered hover responsive>

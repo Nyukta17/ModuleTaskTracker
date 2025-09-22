@@ -43,6 +43,12 @@ class ApiRoute {
     getTask (id: string): string  {
         return this.ApiBase+`/tasks/getTasks/${id}`;
     }
+    updateTaskStatus(id_task:string):string{
+        return this.ApiBase + `/tasks/${id_task}/statusUpdate`
+    }
+    getMyTask(id:string):string{
+        return this.ApiBase +`/tasks/${id}/myTasks`
+    }
 }
 
 export default ApiRoute;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
 import { useNavigate } from 'react-router-dom';
 import '../style/authoForm.css';
@@ -34,16 +34,22 @@ interface SignInProps {
 const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
   const [companyOrEmail, setCompanyOrEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isEmployee, setIsEmployee] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const Authentication = async () => {
     try {
       const bodyData: Record<string, string> = { password };
-      if (companyOrEmail.includes("@")) {
-        bodyData.email = companyOrEmail;
+
+      if (isEmployee) {
+        bodyData.employee = companyOrEmail; // для входа сотрудника
       } else {
-        bodyData.company = companyOrEmail;
+        if (companyOrEmail.includes("@")) {
+          bodyData.email = companyOrEmail;
+        } else {
+          bodyData.company = companyOrEmail;
+        }
       }
 
       const response = await fetch(api.SingIn(), {
@@ -75,27 +81,39 @@ const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
 
   return (
     <>
-      <h1>Вход</h1>
-      <input
-        type="text"
-        name="CompanyOrEmail"
-        value={companyOrEmail}
-        onChange={(e) => setCompanyOrEmail(e.target.value)}
-        placeholder="Компания или Email"
-      />
-      <input
-        type="password"
-        name="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Пароль"
-      />
-      <Button onClick={Authentication}>Войти</Button>
+      <h1>{isEmployee ? "Вход сотрудника" : "Вход руководителя"}</h1>
+      <Form.Group>
+        <Form.Control
+          type="text"
+          name="CompanyOrEmail"
+          value={companyOrEmail}
+          onChange={(e) => setCompanyOrEmail(e.target.value)}
+          placeholder={isEmployee ? "Логин сотрудника" : "Компания или Email"}
+        />
+      </Form.Group>
+      <Form.Group>
+        <Form.Control
+          type="password"
+          name="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Пароль"
+        />
+      </Form.Group>
+      <Form.Group style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+        <Form.Check
+          type="switch"
+          id="employee-switch"
+          label="Вход как сотрудник"
+          checked={isEmployee}
+          onChange={() => setIsEmployee(!isEmployee)}
+        />
+      </Form.Group>
+      <Button onClick={Authentication} style={{ marginTop: '10px' }}>Войти</Button>
       {error && <div className="error-message">{error}</div>}
     </>
   );
 };
-
 const SignUp: React.FC = () => {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -146,7 +164,7 @@ const SignUp: React.FC = () => {
 
   return (
     <>
-      <h1>Регистрации</h1>
+      <h1>Регистрация</h1>
       <input
         type="text"
         name="company"
@@ -155,7 +173,7 @@ const SignUp: React.FC = () => {
         placeholder="Компания"
       />
       <input
-        type="text"
+        type="email"
         name="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}

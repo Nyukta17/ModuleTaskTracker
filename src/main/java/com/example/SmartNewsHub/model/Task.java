@@ -33,22 +33,22 @@ public class Task {
 
     private LocalDateTime dueDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "assigned_employee_id")
     private Employee
             assignedEmployee;
 
     // Создатель – обычный пользователь
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "created_by_employee_id")
     private Employee createdByEmployee;
 
     // Создатель – руководитель
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "created_by_company_id")
     private Company createdByManager;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "project_hub_id", nullable = false)
     private Company_Module projectHub;
 

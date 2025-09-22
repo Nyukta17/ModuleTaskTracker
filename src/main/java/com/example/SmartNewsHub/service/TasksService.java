@@ -1,15 +1,19 @@
 package com.example.SmartNewsHub.service;
 
 import com.example.SmartNewsHub.DTO.TaskDTO;
+import com.example.SmartNewsHub.DTO.TaskWithAssigneeDTO;
+import com.example.SmartNewsHub.Enum.TaskStatus;
 import com.example.SmartNewsHub.model.Task;
 import com.example.SmartNewsHub.repository.CompanyRepository;
 import com.example.SmartNewsHub.repository.EmployeeRepository;
 import com.example.SmartNewsHub.repository.ModulesRepository;
 import com.example.SmartNewsHub.repository.TaskRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TasksService {
@@ -40,7 +44,17 @@ public class TasksService {
         task.setProjectHub(modulesRepository.findByCompanyId(dto.getId()).get(0));
         taskRepository.save(task);
     };
-    public List<Task> getAllTasks(Long projectHubId){
+    public List<TaskWithAssigneeDTO> getAllTasks(Long projectHubId){
         return taskRepository.findByProjectHub_Id(projectHubId);
+    }
+    @Transactional
+    public String updateStatusTask(Long id, TaskStatus status) {
+        int updatedCount = taskRepository.updateStatusById(id, status);
+        return updatedCount > 0 ? "OK" : "Задача не найдена";
+    }
+    public List<TaskDTO> findTasksByUserId(Long userId) {
+
+      return taskRepository.findTasksByCreatedByManagerId(userId);
+
     }
 }

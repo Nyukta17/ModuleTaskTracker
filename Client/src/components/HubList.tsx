@@ -3,6 +3,7 @@ import { Button, ListGroup, Spinner, Alert, Container, Row, Col } from "react-bo
 import ApiRoute from "../api/ApiRoute";
 import ModulesDTO from "../DTO/ModulesDTO";
 import CompanyDTO from "../DTO/CompanyDTO";
+import { useNavigate } from 'react-router-dom';
 
 const api = new ApiRoute();
 
@@ -15,6 +16,7 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
   const [projects, setProjects] = useState<ModulesDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(true);
@@ -61,8 +63,8 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
 
   return (
     <Container className="mt-3">
-      <Row>
-        <Col>
+      <Row className="justify-content-center">
+        <Col md={6} lg={5} className="text-center">
           <h2>Выберите проект</h2>
           <ListGroup>
             {projects.map((proj) => (
@@ -75,8 +77,20 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
                   Выбрать
                 </Button>
               </ListGroup.Item>
+              
             ))}
+            
           </ListGroup>
+          <Button
+            variant="success"
+            size="lg"
+            className="my-3"
+            onClick={() => navigate("/create-project")}
+            title="Создать новый проект"
+          >
+            +
+          </Button>
+          
         </Col>
       </Row>
     </Container>

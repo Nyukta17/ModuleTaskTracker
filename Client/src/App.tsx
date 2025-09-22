@@ -4,6 +4,7 @@ import AuthForm from './components/AuthForm';
 import HubList from './components/HubList';
 import Workspace from './components/WorkSpace';
 import RegistrationMessage from './components/RegistrationMessage';
+import Create__project from './components/Create-project';
 
 function App() {
   
@@ -58,6 +59,7 @@ function App() {
           }
         />
         <Route path="/register" element={<RegistrationMessage />} />
+        <Route path="/create-project" element={<Create__project/>}/>
       </Routes>
     </Router>
   );
