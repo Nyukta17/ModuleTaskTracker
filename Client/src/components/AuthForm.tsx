@@ -1,10 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import ApiRoute from "../api/ApiRoute";
 import { useNavigate } from 'react-router-dom';
 import '../style/authoForm.css';
+import ApiRoute from "../api/ApiRoute";
 
-const api = new ApiRoute();
+const api = new ApiRoute;
 
 interface AuthFormProps {
   onLogin: (token: string) => void;
@@ -31,28 +31,42 @@ interface SignInProps {
   onLogin: (token: string) => void;
 }
 
+
 const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
+  const [isEmployee, setIsEmployee] = useState(false);
+  return (
+    <>
+      {isEmployee ? <SignInEmployee onLogin={onLogin} /> : <SignInCompany onLogin={onLogin} setIsEmployee={setIsEmployee} />}
+      <Form.Group style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+        <Form.Check
+          type="switch"
+          id="employee-switch"
+          label="Вход как сотрудник"
+          checked={isEmployee}
+          onChange={() => setIsEmployee(!isEmployee)}
+        />
+      </Form.Group>
+    </>
+  );
+};
+
+const SignInCompany: React.FC<{ onLogin: (token: string) => void, setIsEmployee: (val: boolean) => void }> = ({ onLogin }) => {
   const [companyOrEmail, setCompanyOrEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isEmployee, setIsEmployee] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const Authentication = async () => {
+  const authenticate = async () => {
     try {
       const bodyData: Record<string, string> = { password };
 
-      if (isEmployee) {
-        bodyData.employee = companyOrEmail; // для входа сотрудника
+      if (companyOrEmail.includes("@")) {
+        bodyData.email = companyOrEmail;
       } else {
-        if (companyOrEmail.includes("@")) {
-          bodyData.email = companyOrEmail;
-        } else {
-          bodyData.company = companyOrEmail;
-        }
+        bodyData.company = companyOrEmail;
       }
 
-      const response = await fetch(api.SingIn(), {
+      const response = await fetch(api.SingIn(), { // ваш API путь
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
@@ -81,39 +95,112 @@ const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
 
   return (
     <>
-      <h1>{isEmployee ? "Вход сотрудника" : "Вход руководителя"}</h1>
+      <h1>Вход руководителя</h1>
       <Form.Group>
         <Form.Control
           type="text"
-          name="CompanyOrEmail"
           value={companyOrEmail}
           onChange={(e) => setCompanyOrEmail(e.target.value)}
-          placeholder={isEmployee ? "Логин сотрудника" : "Компания или Email"}
+          placeholder="Компания или Email"
         />
       </Form.Group>
       <Form.Group>
         <Form.Control
           type="password"
-          name="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Пароль"
         />
       </Form.Group>
-      <Form.Group style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
-        <Form.Check
-          type="switch"
-          id="employee-switch"
-          label="Вход как сотрудник"
-          checked={isEmployee}
-          onChange={() => setIsEmployee(!isEmployee)}
-        />
-      </Form.Group>
-      <Button onClick={Authentication} style={{ marginTop: '10px' }}>Войти</Button>
+      <Button onClick={authenticate} style={{ marginTop: '10px' }}>Войти</Button>
       {error && <div className="error-message">{error}</div>}
     </>
   );
 };
+
+const SignInEmployee: React.FC<SignInProps> = ({ onLogin }) => {
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const validateFullName = (name: string): boolean => {
+    const parts = name.trim().split(" ");
+    if (parts.length !== 3) return false;
+    return parts.every(part => /^[А-ЯЁ][а-яё]+$/.test(part));
+  };
+
+  const parseFullName = (name: string) => {
+    const parts = name.trim().split(" ");
+    return { lastName: parts[0], firstName: parts[1], middleName: parts[2] };
+  };
+
+  const handleSubmit = async () => {
+    if (!validateFullName(fullName)) {
+      setError("Введите полное ФИО из трех слов, каждое с заглавной буквы");
+      return;
+    }
+
+    const names = parseFullName(fullName);
+
+    try {
+      setError(null);
+      const response = await fetch(api.SingInEmployee(), { // ваш API путь
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: names.firstName,
+          lastName: names.lastName,
+          middleName: names.middleName,
+          password: password,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.message || "Ошибка при входе");
+        return;
+      }
+
+      const token = await response.text();
+      if (token) {
+        localStorage.setItem("jwtToken", token);
+        onLogin(token);
+        navigate("/hublist");
+      } else {
+        setError("Токен не получен");
+      }
+    } catch (e) {
+      setError("Ошибка сети");
+      console.error(e);
+    }
+  };
+
+  return (
+    <>
+      <h1>Вход сотрудника</h1>
+      <Form.Group>
+        <Form.Control
+          type="text"
+          value={fullName}
+          placeholder="Введите ФИО"
+          onChange={(e) => setFullName(e.target.value)}
+        />
+      </Form.Group>
+      <Form.Group>
+        <Form.Control
+          type="password"
+          value={password}
+          placeholder="Пароль"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </Form.Group>
+      <Button onClick={handleSubmit} style={{ marginTop: '10px' }}>Войти</Button>
+      {error && <div className="error-message">{error}</div>}
+    </>
+  );
+};
+
 const SignUp: React.FC = () => {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -142,7 +229,7 @@ const SignUp: React.FC = () => {
 
   const Registration = async () => {
     try {
-      const response = await fetch(api.SingUp(), {
+      const response = await fetch(api.SingUp(), { // ваш API путь
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company, email, password }),

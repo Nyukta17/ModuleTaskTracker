@@ -1,13 +1,14 @@
 package com.example.SmartNewsHub.DTO;
 
 public class CompanyDTO {
+    private Long id;
     private String email;
     private String password;
     private String Company;
 
     public CompanyDTO(){}
 
-    public CompanyDTO(String email, String password, String Company){
+    public CompanyDTO(Long id, String email, String password, String Company){
         this.email = email;
         this.password = password;
         this.Company = Company;

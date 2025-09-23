@@ -1,6 +1,7 @@
 package com.example.SmartNewsHub.controller;
 
 import com.example.SmartNewsHub.DTO.EmployeeDTO;
+import com.example.SmartNewsHub.model.Employee;
 import com.example.SmartNewsHub.service.EmployeeService;
 import com.example.SmartNewsHub.service.JWTservice;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +38,11 @@ public class EmployeeController {
         }
         return ResponseEntity.ok("Пользователь не зарегистрирован");
     }
-
+    @PostMapping("/SingIn")
+    public ResponseEntity<String> singInEmployee(@RequestBody EmployeeDTO dto){
+        Employee employee = employeeService.singIn(dto);
+        StringBuilder FIO= new StringBuilder().append(dto.getFirstName() +" "+dto.getLastName()+" "+dto.getMiddleName());
+        String token = jwTservice.generateTokenEmployee(FIO.toString(),dto.getId(),dto.getRole());
+        return ResponseEntity.ok(token);
+    }
 }

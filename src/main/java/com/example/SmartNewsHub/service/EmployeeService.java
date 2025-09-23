@@ -6,8 +6,10 @@ import com.example.SmartNewsHub.model.Employee;
 import com.example.SmartNewsHub.repository.CompanyRepository;
 import com.example.SmartNewsHub.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EmployeeService {
@@ -37,4 +39,27 @@ public class EmployeeService {
         employee.setRole("empty");
         return employeeRepository.save(employee);
     }
+    public Employee singIn(EmployeeDTO dto) {
+        Employee employee;
+
+        if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+            employee = employeeRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с таким email не найден"));
+        } else if (dto.getFirstName() != null && dto.getLastName() != null && dto.getMiddleName() != null
+                && !dto.getFirstName().isEmpty() && !dto.getLastName().isEmpty() && !dto.getMiddleName().isEmpty()) {
+
+            employee = employeeRepository.findByFirstNameAndLastNameAndMiddleName(
+                            dto.getFirstName(), dto.getLastName(), dto.getMiddleName())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с таким ФИО не найден"));
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Нужно указать email или ФИО");
+        }
+
+        if (!passwordEncoder.matches(dto.getPassword(), employee.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Неверный пароль");
+        }
+        return employee;
+    }
+
+
 }

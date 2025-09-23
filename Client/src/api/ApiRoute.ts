@@ -16,6 +16,9 @@ class ApiRoute {
     CreateEmployee(): string {
         return this.ApiBase + "/employee/createEmployee";
     }
+    SingInEmployee():string{
+        return this.ApiBase + "/employee/SingIn"
+    }
     getCompanyModules(): string {
         return this.ApiBase + "/company/GetCompanyModules";
     }
@@ -49,6 +52,7 @@ class ApiRoute {
     getMyTask(id:string):string{
         return this.ApiBase +`/tasks/${id}/myTasks`
     }
+
 }
 
 export default ApiRoute;

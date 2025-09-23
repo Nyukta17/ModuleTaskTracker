@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 
 public class EmployeeDTO {
+    private  Long id;
     private  String lastName;
     private  String firstName;
     private  String middleName;
@@ -11,14 +12,33 @@ public class EmployeeDTO {
     private  LocalDate birthday;
     private  String password;
     private  Long companyId;
+    private  String role;
 
-    public EmployeeDTO(String lastName,String firstName,String middleName,String email,String password,Long companyId){
+    public EmployeeDTO(Long id,String role,String lastName,String firstName,String middleName,String email,String password,Long companyId){
+        this.id = id;
+        this.role =role;
         this.lastName = lastName;
         this.firstName = firstName;
         this.middleName = middleName;
         this.email=email;
         this.password=password;
         this.companyId =companyId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getLastName() {
