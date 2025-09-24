@@ -5,17 +5,19 @@ import InviteModal from "./InviteModal"; // компонент из предыд
 import type ModulesDTO from "../DTO/ModulesDTO";
 import ApiRoute from "../api/ApiRoute";
 
-const api = new ApiRoute
+const api = new ApiRoute();
 
 interface WorkspaceProps {
   module: ModulesDTO;
+  role: string | null; // роль пользователя, например "employee" или "manager"
 }
 
-const Workspace: React.FC<WorkspaceProps> = ({ module }) => {
+const Workspace: React.FC<WorkspaceProps> = ({ module, role }) => {
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const token = localStorage.getItem("jwtToken")||"";
 
   if (!module) {
     return <div>Модуль не выбран</div>;
@@ -57,16 +59,25 @@ const Workspace: React.FC<WorkspaceProps> = ({ module }) => {
     }
   };
 
+  // Условный объект пропсов для Header в зависимости от роли
+  const headerProps = role === "employee"
+    ? {
+        companyName: module.company.company,
+        info: "Сотрудник",
+        onCreateInviteLink: () => {}, // у сотрудников нет кнопки (можно отключить или не передавать)
+        loading: false,
+      }
+    : {
+        companyName: module.company.company,
+        info: module.company.role,
+        onCreateInviteLink: createInviteLink,
+        loading,
+      };
+
   return (
     <>
-      <Header
-        companyName={module.company.company}
-        info={module.company.role}
-        onCreateInviteLink={createInviteLink}
-        loading={loading}
-      />
+      <Header token={token} {...headerProps} />
       <DynamicTabs data={dataForTabs} projectHubId={module.id.toString()} />
-      
       {error && <div style={{ color: 'red', padding: '10px 20px' }}>{error}</div>}
 
       {modalOpen && inviteLink && (

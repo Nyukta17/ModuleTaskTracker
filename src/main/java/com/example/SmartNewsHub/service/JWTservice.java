@@ -27,11 +27,12 @@ public class JWTservice {
                 .signWith(secretKey, SignatureAlgorithm.HS256) // Используйте SignatureAlgorithm из JJWT
                 .compact();
     }
-    public String generateTokenEmployee(String fullName,Long id, String role){
+    public String generateTokenEmployee(String fullName,Long id,String company, String role){
         return Jwts.builder()
-                .setSubject(fullName)
+                .setSubject(company)
                 .claim("Id",id)
                 .claim("role",role)
+                .claim("fullName",fullName)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis()+expirationTime))
                 .signWith(secretKey, SignatureAlgorithm.HS256)

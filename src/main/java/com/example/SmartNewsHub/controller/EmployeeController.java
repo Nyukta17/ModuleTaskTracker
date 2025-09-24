@@ -42,7 +42,7 @@ public class EmployeeController {
     public ResponseEntity<String> singInEmployee(@RequestBody EmployeeDTO dto){
         Employee employee = employeeService.singIn(dto);
         StringBuilder FIO= new StringBuilder().append(dto.getFirstName() +" "+dto.getLastName()+" "+dto.getMiddleName());
-        String token = jwTservice.generateTokenEmployee(FIO.toString(),dto.getId(),dto.getRole());
+        String token = jwTservice.generateTokenEmployee(FIO.toString(),employee.getId(),employee.getCompany().getCompany(),employee.getRole());
         return ResponseEntity.ok(token);
     }
 }

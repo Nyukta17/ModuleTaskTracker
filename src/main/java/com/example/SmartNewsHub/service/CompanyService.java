@@ -64,6 +64,7 @@ public class CompanyService {
         return modulesRepository.save(companyModule);
     }
     public List<ModulesDTO> GetCompanyModules(String token){
+        System.out.println(jwtService.getCompanyName(token));
         Company company = companyRepository.findByCompany(jwtService.getCompanyName(token)).orElse(null);
         if(company != null){
             List<Company_Module> companyModules = modulesRepository.findByCompany(company);

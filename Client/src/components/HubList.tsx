@@ -12,13 +12,30 @@ interface HubListProps {
   onSelectProject: (project: ModulesDTO) => void;
 }
 
+// Функция для декодирования payload JWT и извлечения роли
+function getRoleFromToken(token: string): string | null {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    const payloadJson = atob(payloadBase64);
+    const payload = JSON.parse(payloadJson);
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
 const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
   const [projects, setProjects] = useState<ModulesDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Извлекаем роль из токена
+    setRole(getRoleFromToken(token));
+
     setLoading(true);
     setError(null);
     fetch(api.getCompanyModules(), {
@@ -61,40 +78,72 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
       </Container>
     );
 
-  return (
-    <Container className="mt-3">
-      <Row className="justify-content-center">
-        <Col md={6} lg={5} className="text-center">
-          <h2>Выберите проект</h2>
-          <ListGroup>
-            {projects.map((proj) => (
-              <ListGroup.Item
-                key={proj.id}
-                className="d-flex justify-content-between align-items-center"
-              >
-                <div>Проект {proj.company.company}</div>
-                <Button variant="primary" size="sm" onClick={() => onSelectProject(proj)}>
-                  Выбрать
-                </Button>
-              </ListGroup.Item>
-              
-            ))}
-            
-          </ListGroup>
-          <Button
-            variant="success"
-            size="lg"
-            className="my-3"
-            onClick={() => navigate("/create-project")}
-            title="Создать новый проект"
-          >
-            +
-          </Button>
-          
-        </Col>
-      </Row>
-    </Container>
-  );
+  // Условный рендер интерфейса в зависимости от роли
+  if (role === "Boss") {
+    return (
+      <Container className="mt-3">
+        <h2>Панель менеджера</h2>
+        {/* Менеджер видит список проектов и кнопку создания */}
+        <Row className="justify-content-center">
+          <Col md={6} lg={5} className="text-center">
+            <ListGroup>
+              {projects.map((proj) => (
+                <ListGroup.Item
+                  key={proj.id}
+                  className="d-flex justify-content-between align-items-center"
+                >
+                  <div>Проект {proj.company.company}</div>
+                  <Button variant="primary" size="sm" onClick={() => onSelectProject(proj)}>
+                    Выбрать
+                  </Button>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+            <Button
+              variant="success"
+              size="lg"
+              className="my-3"
+              onClick={() => navigate("/create-project")}
+              title="Создать новый проект"
+            >
+              +
+            </Button>
+          </Col>
+        </Row>
+      </Container>
+    );
+  } else if (role === "employee") {
+    return (
+      <Container className="mt-3">
+        <h2>Панель сотрудника</h2>
+        {/* Сотрудник видит только список проектов без кнопки создания */}
+        <Row className="justify-content-center">
+          <Col md={6} lg={5} className="text-center">
+            <ListGroup>
+              {projects.map((proj) => (
+                <ListGroup.Item
+                  key={proj.id}
+                  className="d-flex justify-content-between align-items-center"
+                >
+                  <div>Проект {proj.company.company}</div>
+                  <Button variant="primary" size="sm" onClick={() => onSelectProject(proj)}>
+                    Выбрать
+                  </Button>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </Col>
+        </Row>
+      </Container>
+    );
+  } else {
+    // Если роль не определена или иная - отображаем базовую панель
+    return (
+      <Container className="mt-3">
+        <Alert variant="warning">Нет доступа к панели: роль не распознана</Alert>
+      </Container>
+    );
+  }
 };
 
 export default Hublist;
