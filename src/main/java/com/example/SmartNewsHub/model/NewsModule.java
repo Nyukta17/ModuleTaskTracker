@@ -1,13 +1,8 @@
 package com.example.SmartNewsHub.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Table;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
+import com.example.SmartNewsHub.Enum.NewsType;
+import com.example.SmartNewsHub.Enum.TaskStatus;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -58,6 +53,7 @@ public class NewsModule {
     public void setId(Long id) {
         this.id = id;
     }
+
 
     public String getTitle() {
         return title;

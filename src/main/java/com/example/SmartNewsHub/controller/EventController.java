@@ -24,6 +24,7 @@ public class EventController {
     }
     @PostMapping("/setDate")
     public ResponseEntity<String> setEvent(@RequestHeader("Authorization") String authToken,@RequestBody EventModuleDTO dto){
+
         if(authToken !=null&&authToken.startsWith("Bearer ")){
             String token = authToken.substring(7);
             if(jwTservice.validateToken(token)){

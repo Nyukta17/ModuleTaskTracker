@@ -10,7 +10,6 @@ type TaskTrackerBaseComponentProps = {
 
 const TaskTrackerBaseComponent: React.FC<TaskTrackerBaseComponentProps> = ({ projectHubId }) => {
   const [activeKey, setActiveKey] = useState("tasks");
-
   return (
     <>
       <Tabs
@@ -31,7 +30,8 @@ const TaskTrackerBaseComponent: React.FC<TaskTrackerBaseComponentProps> = ({ pro
         </Tab>
         <Tab eventKey="prioritiTasks" title="Мои задачи">
           <div style={{ padding: 20, minHeight: 200 }}>
-            <MyTasks />
+            <MyTasks hubId={projectHubId} />
+            {/* передаем prop hubId в MyTasks */}
           </div>
         </Tab>
       </Tabs>

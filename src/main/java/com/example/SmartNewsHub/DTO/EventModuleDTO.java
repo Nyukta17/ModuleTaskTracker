@@ -1,11 +1,14 @@
 package com.example.SmartNewsHub.DTO;
 
+import com.example.SmartNewsHub.Enum.NewsType;
+
 import java.time.LocalDate;
 
 public class EventModuleDTO {
     private Long id;
     private String text;
     private LocalDate dateTime;
+    private NewsType type;
     private Long user_id;
 
     public Long getId() {
@@ -14,6 +17,14 @@ public class EventModuleDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public NewsType getType() {
+        return type;
+    }
+
+    public void setType(NewsType type) {
+        this.type = type;
     }
 
     public String getText() {

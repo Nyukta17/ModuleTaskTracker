@@ -1,55 +1,69 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Container, Table, Button, Spinner } from "react-bootstrap";
 import ApiRoute from "../../../api/ApiRoute";
-const api = new ApiRoute
+const api = new ApiRoute();
+
 type Task = {
   id: string;
   title: string;
   assignedUser: string;
-  status: "NEW" | "IN_PROGRESS" | "TESTING" | "DONE";
+  status: "NEW" | "IN_PROGRESS" | "TESTING" | "APPROVED";
 };
 
-const statuses: Task["status"][] = ["NEW", "IN_PROGRESS", "TESTING", "DONE"];
+const statuses: Task["status"][] = ["NEW", "IN_PROGRESS", "TESTING", "APPROVED"];
 
-const MyTasks = () => {
+interface MyTasksProps {
+  hubId: string; // id текущего хаба
+}
+
+const MyTasks: React.FC<MyTasksProps> = ({ hubId }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   function parseJwt(token: any) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-      .split('')
-      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return null;
+    }
   }
-}
 
-  // Загрузка задач при монтировании
   useEffect(() => {
+    if (!hubId) return;
     const fetchTasks = async () => {
       try {
         const token = localStorage.getItem("jwtToken");
-        const id = parseJwt(token).companyId;
-        const response = await fetch(api.getMyTask(id), {
+        if (!token) throw new Error("Токен не найден");
+        const payload = parseJwt(token);
+        if (!payload) throw new Error("Ошибка парсинга токена");
+        const role = payload.role;
+        let id;
+        let url = "";
+        if (role === "employee") {
+          id = payload.Id;
+          url = api.getEmployeeTasks(id, hubId);
+        } else {
+          id = payload.companyId;
+          url = api.getMyTask(id, hubId);
+        }
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
-            Accept: "application/json"
-          }
+            Accept: "application/json",
+          },
         });
-        if (!response.ok) {
-          throw new Error("Ошибка загрузки задач");
-        }
+        if (!response.ok) throw new Error("Ошибка загрузки задач");
         const data: Task[] = await response.json();
         setTasks(data);
-        
       } catch (e: any) {
         setError(e.message || "Ошибка загрузки");
       } finally {
@@ -57,21 +71,19 @@ const MyTasks = () => {
       }
     };
     fetchTasks();
-  }, []);
+  }, [hubId]);
 
-  // Обновление статуса задачи и отправка на сервер
   const changeStatus = async (taskId: string, direction: "forward" | "backward") => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
-
     const currentIndex = statuses.indexOf(task.status);
     let newIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
     if (newIndex < 0) newIndex = 0;
     if (newIndex >= statuses.length) newIndex = statuses.length - 1;
     const newStatus = statuses[newIndex];
-
     try {
       const token = localStorage.getItem("jwtToken");
+      if (!token) throw new Error("Токен не найден");
       const response = await fetch(api.updateTaskStatus(taskId), {
         method: "PUT",
         headers: {
@@ -80,9 +92,7 @@ const MyTasks = () => {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!response.ok) {
-        throw new Error("Ошибка обновления статуса задачи");
-      }
+      if (!response.ok) throw new Error("Ошибка обновления статуса задачи");
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
       );
@@ -91,17 +101,19 @@ const MyTasks = () => {
     }
   };
 
-  if (loading) return (
-    <Container className="mt-3">
-      <Spinner animation="border" />
-    </Container>
-  );
+  if (loading)
+    return (
+      <Container className="mt-3">
+        <Spinner animation="border" />
+      </Container>
+    );
 
-  if (error) return (
-    <Container className="mt-3">
-      <div className="text-danger">Ошибка: {error}</div>
-    </Container>
-  );
+  if (error)
+    return (
+      <Container className="mt-3">
+        <div className="text-danger">Ошибка: {error}</div>
+      </Container>
+    );
 
   return (
     <Container>
@@ -135,7 +147,7 @@ const MyTasks = () => {
                   <Button
                     size="sm"
                     variant="primary"
-                    disabled={status === "DONE"}
+                    disabled={status === "APPROVED"}
                     onClick={() => changeStatus(id, "forward")}
                   >
                     Вперед →

@@ -52,9 +52,14 @@ public class TasksService {
         int updatedCount = taskRepository.updateStatusById(id, status);
         return updatedCount > 0 ? "OK" : "Задача не найдена";
     }
-    public List<TaskDTO> findTasksByUserId(Long userId) {
+    public List<TaskDTO> findTasksByUserId(Long userId,Long Hub) {
 
-      return taskRepository.findTasksByCreatedByManagerId(userId);
+      return taskRepository.findTasksByCreatedByManagerIdAndProjectHubId(userId,Hub);
+
+    }
+    public List<TaskWithAssigneeDTO> findTasksByUserIdEm(Long userId,Long projectId) {
+
+        return taskRepository.findTasksByAssignedUserIdAndProjectHubId(userId,projectId);
 
     }
 }

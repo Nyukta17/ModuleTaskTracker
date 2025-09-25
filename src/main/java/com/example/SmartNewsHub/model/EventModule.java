@@ -1,5 +1,6 @@
 package com.example.SmartNewsHub.model;
 
+import com.example.SmartNewsHub.Enum.NewsType;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -13,7 +14,14 @@ public class EventModule {
     @Column(length = 50)
     private String text;
 
+    @Enumerated(EnumType.STRING)
+    private NewsType type;
+
     private LocalDate dateTime;
+
+    private String startTime; // формат "HH:mm"
+    private String endTime;   // формат "HH:mm"
+
 
     @ManyToOne
     @JoinColumn(name="user_id", nullable = true)
@@ -25,6 +33,15 @@ public class EventModule {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public NewsType getType() {
+        return type;
+    }
+
+
+    public void setType(NewsType type) {
+        this.type = type;
     }
 
     public String getText() {

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../style/authoForm.css';
 import ApiRoute from "../api/ApiRoute";
 
-const api = new ApiRoute;
+const api = new ApiRoute();
 
 interface AuthFormProps {
   onLogin: (token: string) => void;
@@ -16,12 +16,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
   return (
     <>
       <div className="auth-container">
-        {isLog ? <SignIn onLogin={onLogin} /> : <SignUp />}
-      </div>
-      <div style={{ textAlign: 'center', marginTop: '15px' }}>
-        <Button variant="secondary" onClick={() => setIsLog(!isLog)}>
-          {isLog ? "Перейти к регистрации" : "Перейти ко входу"}
-        </Button>
+        <Form>
+          {isLog ? <SignIn onLogin={onLogin} /> : <SignUp />}
+          <Button
+            variant="warning"
+            className="auth-toggle-btn"
+            onClick={() => setIsLog(!isLog)}
+            style={{ display: 'block', margin: '15px auto 0' }}
+            type="button"
+          >
+            {isLog ? "Перейти к регистрации" : "Перейти ко входу"}
+          </Button>
+        </Form>
       </div>
     </>
   );
@@ -31,12 +37,16 @@ interface SignInProps {
   onLogin: (token: string) => void;
 }
 
-
 const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
   const [isEmployee, setIsEmployee] = useState(false);
+
   return (
     <>
-      {isEmployee ? <SignInEmployee onLogin={onLogin} /> : <SignInCompany onLogin={onLogin} setIsEmployee={setIsEmployee} />}
+      {isEmployee ? (
+        <SignInEmployee onLogin={onLogin} />
+      ) : (
+        <SignInCompany onLogin={onLogin} setIsEmployee={setIsEmployee} />
+      )}
       <Form.Group style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
         <Form.Check
           type="switch"
@@ -50,7 +60,7 @@ const SignIn: React.FC<SignInProps> = ({ onLogin }) => {
   );
 };
 
-const SignInCompany: React.FC<{ onLogin: (token: string) => void, setIsEmployee: (val: boolean) => void }> = ({ onLogin }) => {
+const SignInCompany: React.FC<{ onLogin: (token: string) => void; setIsEmployee: (val: boolean) => void }> = ({ onLogin }) => {
   const [companyOrEmail, setCompanyOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +76,7 @@ const SignInCompany: React.FC<{ onLogin: (token: string) => void, setIsEmployee:
         bodyData.company = companyOrEmail;
       }
 
-      const response = await fetch(api.SingIn(), { // ваш API путь
+      const response = await fetch(api.SingIn(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
@@ -112,7 +122,7 @@ const SignInCompany: React.FC<{ onLogin: (token: string) => void, setIsEmployee:
           placeholder="Пароль"
         />
       </Form.Group>
-      <Button onClick={authenticate} style={{ marginTop: '10px' }}>Войти</Button>
+      <Button onClick={authenticate} style={{ marginTop: '10px' }} type="button" variant="success">Войти</Button>
       {error && <div className="error-message">{error}</div>}
     </>
   );
@@ -145,7 +155,7 @@ const SignInEmployee: React.FC<SignInProps> = ({ onLogin }) => {
 
     try {
       setError(null);
-      const response = await fetch(api.SingInEmployee(), { // ваш API путь
+      const response = await fetch(api.SingInEmployee(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -195,7 +205,7 @@ const SignInEmployee: React.FC<SignInProps> = ({ onLogin }) => {
           onChange={(e) => setPassword(e.target.value)}
         />
       </Form.Group>
-      <Button onClick={handleSubmit} style={{ marginTop: '10px' }}>Войти</Button>
+      <Button onClick={handleSubmit} style={{ marginTop: '10px' }} type="button" variant="success">Войти</Button>
       {error && <div className="error-message">{error}</div>}
     </>
   );
@@ -229,7 +239,7 @@ const SignUp: React.FC = () => {
 
   const Registration = async () => {
     try {
-      const response = await fetch(api.SingUp(), { // ваш API путь
+      const response = await fetch(api.SingUp(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company, email, password }),
@@ -252,34 +262,42 @@ const SignUp: React.FC = () => {
   return (
     <>
       <h1>Регистрация</h1>
-      <input
-        type="text"
-        name="company"
-        value={company}
-        onChange={(e) => setCompany(e.target.value)}
-        placeholder="Компания"
-      />
-      <input
-        type="email"
-        name="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <input
-        type="password"
-        placeholder="Пароль"
-        value={password}
-        onChange={(e) => handlePasswordChange(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Подтверждение пароля"
-        value={confirmPassword}
-        onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-      />
+      <Form.Group>
+        <Form.Control
+          type="text"
+          name="company"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          placeholder="Компания"
+        />
+      </Form.Group>
+      <Form.Group>
+        <Form.Control
+          type="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+        />
+      </Form.Group>
+      <Form.Group>
+        <Form.Control
+          type="password"
+          placeholder="Пароль"
+          value={password}
+          onChange={(e) => handlePasswordChange(e.target.value)}
+        />
+      </Form.Group>
+      <Form.Group>
+        <Form.Control
+          type="password"
+          placeholder="Подтверждение пароля"
+          value={confirmPassword}
+          onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+        />
+      </Form.Group>
       {error && <div className="error-message">{error}</div>}
-      <Button onClick={Registration}>Зарегистрироваться</Button>
+      <Button onClick={Registration} type="button">Зарегистрироваться</Button>
       {message && <div className="message">{message}</div>}
     </>
   );

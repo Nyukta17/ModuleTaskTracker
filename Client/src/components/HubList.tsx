@@ -15,9 +15,15 @@ interface HubListProps {
 // Функция для декодирования payload JWT и извлечения роли
 function getRoleFromToken(token: string): string | null {
   try {
-    const payloadBase64 = token.split('.')[1];
-    const payloadJson = atob(payloadBase64);
-    const payload = JSON.parse(payloadJson);
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
     return payload.role || null;
   } catch {
     return null;
@@ -33,8 +39,20 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Извлекаем роль из токена
-    setRole(getRoleFromToken(token));
+    
+    const savedRole = localStorage.getItem('userRole');
+    if (savedRole) {
+      setRole(savedRole);
+    } else {
+      
+      const decodedRole = getRoleFromToken(token);
+      if (decodedRole) {
+        localStorage.setItem('userRole', decodedRole);
+        setRole(decodedRole);
+      } else {
+        setRole(null);
+      }
+    }
 
     setLoading(true);
     setError(null);
@@ -78,16 +96,15 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
       </Container>
     );
 
-  // Условный рендер интерфейса в зависимости от роли
   if (role === "Boss") {
     return (
       <Container className="mt-3">
-        <h2>Панель менеджера</h2>
-        {/* Менеджер видит список проектов и кнопку создания */}
+        <h2>Проекты</h2>
+        
         <Row className="justify-content-center">
           <Col md={6} lg={5} className="text-center">
             <ListGroup>
-              {projects.map((proj) => (
+              {projects.map(proj => (
                 <ListGroup.Item
                   key={proj.id}
                   className="d-flex justify-content-between align-items-center"
@@ -115,12 +132,12 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
   } else if (role === "employee") {
     return (
       <Container className="mt-3">
-        <h2>Панель сотрудника</h2>
-        {/* Сотрудник видит только список проектов без кнопки создания */}
+        <h2>Проекты</h2>
+       
         <Row className="justify-content-center">
           <Col md={6} lg={5} className="text-center">
             <ListGroup>
-              {projects.map((proj) => (
+              {projects.map(proj => (
                 <ListGroup.Item
                   key={proj.id}
                   className="d-flex justify-content-between align-items-center"
@@ -137,7 +154,7 @@ const Hublist: React.FC<HubListProps> = ({ token, onSelectProject }) => {
       </Container>
     );
   } else {
-    // Если роль не определена или иная - отображаем базовую панель
+    
     return (
       <Container className="mt-3">
         <Alert variant="warning">Нет доступа к панели: роль не распознана</Alert>

@@ -52,7 +52,7 @@ function App() {
           path="/hub/:id"
           element={
             isAuthenticated && selectedProject ? (
-              <Workspace module={selectedProject} />
+              <Workspace module={selectedProject} role={null} />
             ) : (
               <Navigate to="/hublist" replace />
             )

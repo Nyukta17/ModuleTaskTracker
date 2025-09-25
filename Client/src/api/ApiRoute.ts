@@ -16,7 +16,7 @@ class ApiRoute {
     CreateEmployee(): string {
         return this.ApiBase + "/employee/createEmployee";
     }
-    SingInEmployee():string{
+    SingInEmployee(): string {
         return this.ApiBase + "/employee/SingIn"
     }
     getCompanyModules(): string {
@@ -43,16 +43,22 @@ class ApiRoute {
     setTask(): string {
         return this.ApiBase + '/tasks/createTask'
     }
-    getTask (id: string): string  {
-        return this.ApiBase+`/tasks/getTasks/${id}`;
+    getTask(id: string): string {
+        return this.ApiBase + `/tasks/getTasks/${id}`;
     }
-    updateTaskStatus(id_task:string):string{
-        return this.ApiBase + `/tasks/${id_task}/statusUpdate`
-    }
-    getMyTask(id:string):string{
-        return this.ApiBase +`/tasks/${id}/myTasks`
+    getEmployeeTasks(userId: string, hubId: string) {
+        return this.ApiBase +`/tasks/employee-tasks?userId=${userId}&hubId=${hubId}`;
     }
 
+    getMyTask(companyId: string, hubId: string) {
+        return this.ApiBase +`/tasks/my-tasks?companyId=${companyId}&hubId=${hubId}`;
+    }
+
+    updateTaskStatus(taskId: string) {
+        return this.ApiBase +`/tasks/${taskId}/statusUpdate`;
+    }
 }
+
+
 
 export default ApiRoute;

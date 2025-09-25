@@ -17,10 +17,9 @@ public class TaskWithAssigneeDTO {
     private LocalDateTime dueDate;
     private String assignedEmployeeName;
 
-    public TaskWithAssigneeDTO(Long id, String title, String description, TaskStatus status,
-                               TaskPriority priority, LocalDateTime createdAt,
-                               LocalDateTime updatedAt, LocalDateTime dueDate,
-                               String assignedEmployeeName) {
+    public TaskWithAssigneeDTO(Long id, String title, String description, TaskStatus status, TaskPriority priority,
+                               LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime dueDate,
+                               String assignedEmployeeFullName) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -29,12 +28,9 @@ public class TaskWithAssigneeDTO {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.dueDate = dueDate;
-        this.assignedEmployeeName = assignedEmployeeName;
+        this.assignedEmployeeName = assignedEmployeeFullName;
     }
 
-    public TaskWithAssigneeDTO() {
-        // Пустой конструктор
-    }
 
     public Long getId() {
         return id;

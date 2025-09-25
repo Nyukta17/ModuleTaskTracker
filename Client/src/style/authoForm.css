@@ -1,44 +1,50 @@
 .auth-container {
   max-width: 400px;
-  margin: 60px auto;
-  padding: 20px 25px;
+  margin: 40px auto; /* уменьшили верхний и нижний отступ */
+  padding: 15px 20px; /* немного уменьшили внутренние отступы */
   background-color: white;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px; /* уменьшили расстояние между элементами */
   align-items: center;
 }
 
 .auth-container h1 {
   width: 100%;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px; /* немного уменьшили отступ снизу */
 }
 
 .auth-container input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px; /* уменьшили внутренние отступы */
   font-size: 16px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   box-sizing: border-box;
+  margin-bottom: 6px; /* добавили небольшой нижний отступ для явной структуры */
 }
 
 .auth-container button {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 8px; /* чуть уменьшили отступ сверху */
+  padding: 10px; /* возможно, тоже немного уменьшить высоту кнопки */
 }
 
 .error-message {
   color: red;
   width: 100%;
   text-align: center;
+  margin-top: 4px; /* небольшой верхний отступ */
+  margin-bottom: 4px; /* небольшой нижний отступ */
 }
 
 .message {
   color: green;
   width: 100%;
   text-align: center;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }

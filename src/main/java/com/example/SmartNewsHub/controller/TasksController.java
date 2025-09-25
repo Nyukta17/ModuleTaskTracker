@@ -4,7 +4,6 @@ import com.example.SmartNewsHub.DTO.StatusDTO;
 import com.example.SmartNewsHub.DTO.TaskDTO;
 import com.example.SmartNewsHub.DTO.TaskWithAssigneeDTO;
 import com.example.SmartNewsHub.Enum.TaskStatus;
-import com.example.SmartNewsHub.model.Task;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.TasksService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,10 +77,11 @@ public class TasksController {
 
         return ResponseEntity.ok(result);
     }
-    @GetMapping("{id}/myTasks")
-    public ResponseEntity<?> getMyTasks(
+    @GetMapping("/my-tasks")
+    public ResponseEntity<?> getEmployeeTasks(
             @RequestHeader("Authorization") String authHeader,
-            @PathVariable("id") Long id) {
+            @RequestParam("companyId") Long companyId,
+            @RequestParam("hubId") Long hubId) {
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Отсутствует или неверный токен");
@@ -93,7 +93,32 @@ public class TasksController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или просроченный токен");
         }
 
-        List<TaskDTO> tasks = tasksService.findTasksByUserId(id);
+        List<TaskDTO> tasks = tasksService.findTasksByUserId(companyId, hubId);
+
+        if (tasks.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(tasks);
+    }
+
+    @GetMapping("/employee-tasks")
+    public ResponseEntity<?> getMyTasks(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("userId") Long userId,
+            @RequestParam("hubId") Long hubId) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Отсутствует или неверный токен");
+        }
+
+        String token = authHeader.substring(7);
+
+        if (!jwTservice.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверный или просроченный токен");
+        }
+
+        List<TaskWithAssigneeDTO> tasks = tasksService.findTasksByUserIdEm(userId, hubId);
 
         if (tasks.isEmpty()) {
             return ResponseEntity.noContent().build();

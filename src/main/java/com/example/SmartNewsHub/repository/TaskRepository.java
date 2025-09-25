@@ -29,21 +29,24 @@ public interface TaskRepository extends JpaRepository<Task,Long> {
     @Query("UPDATE Task t SET t.status = :status WHERE t.id = :taskId")
     int updateStatusById(@Param("taskId") Long taskId, @Param("status") TaskStatus status);
 
-//    @Query("SELECT new com.example.SmartNewsHub.DTO.TaskDTO(" +
-//            "t.id, t.title, t.description, t.status, t.priority, " +
-//            "t.createdAt, t.updatedAt, t.dueDate, " +
-//            "CONCAT(ae.firstName, ' ', ae.lastName)) " +
-//            "FROM Task t " +
-//            "LEFT JOIN t.assignedEmployee ae " +
-//            "WHERE ae.id = :userId")
-//    List<TaskDTO> findTasksByAssignedUserId(@Param("userId") Long userId);
+    @Query("SELECT new com.example.SmartNewsHub.DTO.TaskWithAssigneeDTO(" +
+            "t.id, t.title, t.description, t.status, t.priority, " +
+            "t.createdAt, t.updatedAt, t.dueDate, " +
+            "CONCAT(ae.firstName, ' ', ae.lastName)) " +
+            "FROM Task t JOIN t.assignedEmployee ae " +  // INNER JOIN для надежной фильтрации
+            "WHERE ae.id = :userId AND t.projectHub.id = :projectHubId")
+    List<TaskWithAssigneeDTO> findTasksByAssignedUserIdAndProjectHubId(@Param("userId") Long userId,
+                                                                       @Param("projectHubId") Long projectHubId);
 
     @Query("SELECT new com.example.SmartNewsHub.DTO.TaskDTO(" +
             "t.id, t.title, t.description, t.status, t.priority, " +
             "t.createdAt, t.updatedAt, t.dueDate) " +
             "FROM Task t " +
-            "WHERE t.createdByManager.id = :companyId")
-    List<TaskDTO> findTasksByCreatedByManagerId(@Param("companyId") Long companyId);
+            "WHERE t.createdByManager.id = :companyId AND t.projectHub.id = :projectHubId")
+    List<TaskDTO> findTasksByCreatedByManagerIdAndProjectHubId(@Param("companyId") Long companyId,
+                                                               @Param("projectHubId") Long projectHubId);
+
+
 
 
 

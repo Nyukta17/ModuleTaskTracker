@@ -42,6 +42,7 @@ public class EventService {
         EventModule eventModule = new EventModule();
         eventModule.setText(dto.getText());
         eventModule.setDateTime(dto.getDateTime());
+        eventModule.setType(dto.getType());
         eventModule.setUser(null);
         return eventRepository.save(eventModule);
     }
