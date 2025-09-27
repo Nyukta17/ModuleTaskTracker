@@ -1,79 +1,66 @@
 package com.example.SmartNewsHub.model;
-
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
-@Table(name="users")
+@Table(name = "users")
 public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Column(nullable = false,unique = true)
-    private String email;
+    @Column(unique = true, nullable = false)
+    private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false,unique = true)
-    private String company;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles;
 
-    @Column(nullable = false)
-    private String role;
+    public Users() {}
 
-    @CreationTimestamp
-    @Column(nullable = false, unique = false)
-    private LocalDateTime createdAt;
-
-    public Users() {
+    public Users(String username, String password, Set<Role> roles) {
+        this.username = username;
+        this.password = password;
+        this.roles = roles;
     }
 
-    public Users(String email, String password, String Company, String role) {
-        this.email = email;
-        this.password=password;
-        this.company =Company;
-        this.role = role;
-    }
-
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public String getEmail() {
-        return email;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getPassword() {
         return password;
-    }
-    public String getCompany() {
-        return company;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public void setCompany(String company) {
-        this.company = company;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public Set<Role> getRoles() {
+        return roles;
     }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+// геттеры и сеттеры
 }
