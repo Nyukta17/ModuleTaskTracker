@@ -2,6 +2,7 @@ package com.example.SmartNewsHub.model;
 
 import jakarta.persistence.*;
 import java.util.Set;
+import java.util.Objects;
 
 @Entity
 @Table(name = "role")
@@ -11,7 +12,7 @@ public class Role {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String name; // например, "ADMIN", "USER"
+    private String name; // Например, "ADMIN", "USER"
 
     @ManyToMany(mappedBy = "roles")
     private Set<Users> users;
@@ -21,6 +22,8 @@ public class Role {
     public Role(String name) {
         this.name = name;
     }
+
+    // Геттеры и сеттеры
 
     public Long getId() {
         return id;
@@ -45,5 +48,17 @@ public class Role {
     public void setUsers(Set<Users> users) {
         this.users = users;
     }
-    // геттеры и сеттеры
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Role)) return false;
+        Role role = (Role) o;
+        return Objects.equals(name, role.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
 }

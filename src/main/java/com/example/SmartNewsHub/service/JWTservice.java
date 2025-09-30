@@ -14,8 +14,7 @@ import java.util.Date;
 public class JWTservice {
 
     private final SecretKey secretKey = Keys.hmacShaKeyFor("ОченьДлинныйСекретныйКлючДляПодписиJWT".getBytes());
-    private final long expirationTime = 3600000;
-
+    private final long expirationTime = 3600000; // 1 час
 
     public String generateToken(String company, String role){
         return Jwts.builder()
@@ -23,40 +22,37 @@ public class JWTservice {
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(secretKey, SignatureAlgorithm.HS256) // Используйте SignatureAlgorithm из JJWT
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
-
 
     public boolean validateToken(String token){
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-
     public String getCompanyName(String token){
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
         return claims.getSubject();
     }
-
 
     public String getRole(String token){
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
         return claims.get("role", String.class);
     }
 }

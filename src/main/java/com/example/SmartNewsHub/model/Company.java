@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "company")
@@ -26,14 +27,18 @@ public class Company {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public Company() {
-    }
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+    private Set<Users> users;
+
+    public Company() {}
 
     public Company(String name, String email, String phone) {
         this.name = name;
         this.email = email;
         this.phone = phone;
     }
+
+    // Геттеры и сеттеры
 
     public Long getId() {
         return id;
@@ -43,27 +48,35 @@ public class Company {
         return name;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Set<Users> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<Users> users) {
+        this.users = users;
     }
 }
