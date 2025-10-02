@@ -1,10 +1,12 @@
 package com.example.SmartNewsHub.controller;
 
+import com.example.SmartNewsHub.details.CustomUserDetails;
 import com.example.SmartNewsHub.dto.ProjectDTO;
 import com.example.SmartNewsHub.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,10 +21,12 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
-    @PostMapping
-    public ResponseEntity<ProjectDTO> createProject(@RequestBody ProjectDTO dto) {
-        ProjectDTO created = projectService.createProject(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    @PostMapping("/createProject")
+    public ResponseEntity<ProjectDTO> createProject(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody ProjectDTO dto) {
+        System.out.println("круто " + customUserDetails.getUsername() +"из "+customUserDetails.getCompanyId());
+        return null;
+//        ProjectDTO created = projectService.createProject(dto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/company/{companyId}")

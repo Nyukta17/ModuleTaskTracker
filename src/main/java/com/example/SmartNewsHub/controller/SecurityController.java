@@ -1,5 +1,6 @@
 package com.example.SmartNewsHub.controller;
 
+import com.example.SmartNewsHub.details.CustomUserDetails;
 import com.example.SmartNewsHub.dto.JWTResponse;
 import com.example.SmartNewsHub.dto.LoginRequest;
 import com.example.SmartNewsHub.dto.RegisterRequest;
@@ -42,13 +43,13 @@ public class SecurityController {
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
             );
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
+            CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
             String roles = userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(","));
 
-            String token = jwtService.generateToken(userDetails.getUsername(), roles);
+            String token = jwtService.generateToken(userDetails.getUsername(), roles,userDetails.getCompanyId());
 
             return ResponseEntity.ok(new JWTResponse(token));
         } catch (AuthenticationException e) {

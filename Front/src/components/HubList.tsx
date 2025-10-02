@@ -1,185 +1,144 @@
-import React, { useEffect, useState } from "react";
-import { Button, Form, ListGroup, Spinner, Alert, Container, Row, Col } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Button, Form, Modal } from "react-bootstrap";
+import ApiRoute from "../api/ApiRoute";
 
-interface Project {
+interface ProjectHub {
   id: number;
   name: string;
   description?: string;
 }
+const api = new ApiRoute()
 
-interface Module {
-  id: number;
-  name: string;
-}
-
-interface HubListProps {
-  role: "ADMIN" | "USER";
-  companyId: number;
-}
-
-const HubList: React.FC<HubListProps> = ({ role, companyId }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-  const [errorProjects, setErrorProjects] = useState<string | null>(null);
-  const [newProjectName, setNewProjectName] = useState("");
-
-  const [modules, setModules] = useState<Module[]>([]);
-  const [loadingModules, setLoadingModules] = useState(false);
-  const [errorModules, setErrorModules] = useState<string | null>(null);
-  const [newModuleName, setNewModuleName] = useState("");
-
-  // Загрузка проектов по компании
-  const fetchProjects = async () => {
-    setLoadingProjects(true);
-    setErrorProjects(null);
-    try {
-      const response = await fetch(`/api/projects/company/${companyId}`);
-      if (!response.ok) throw new Error("Ошибка загрузки проектов");
-      const data = await response.json();
-      setProjects(data);
-      // Если ранее выбранного проекта нет, выбрать первый автоматически
-      if(data.length > 0) setSelectedProject(data[0]);
-    } catch (err: any) {
-      setErrorProjects(err.message || "Неизвестная ошибка");
-    } finally {
-      setLoadingProjects(false);
-    }
-  };
-
-  // Загрузка модулей выбранного проекта
-  const fetchModules = async (projectId: number) => {
-    setLoadingModules(true);
-    setErrorModules(null);
-    try {
-      const response = await fetch(`/api/modules/project/${projectId}`);
-      if (!response.ok) throw new Error("Ошибка загрузки модулей");
-      const data = await response.json();
-      setModules(data);
-    } catch (err: any) {
-      setErrorModules(err.message || "Неизвестная ошибка");
-    } finally {
-      setLoadingModules(false);
-    }
-  };
+const HubList: React.FC = () => {
+  const [hubs, setHubs] = useState<ProjectHub[]>([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newHubName, setNewHubName] = useState("");
+  const [newHubDescription, setNewHubDescription] = useState("");
 
   useEffect(() => {
-    fetchProjects();
-  }, [companyId]);
+    // Заглушка для загрузки проектов
+    const fetchHubs = async () => {
+      setHubs([
+        { id: 1, name: "Проект Alpha", description: "Описание проекта Alpha" },
+        { id: 2, name: "Проект Beta", description: "Описание проекта Beta" },
+        { id: 3, name: "Проект Gamma", description: "Описание проекта Gamma" },
+      ]);
+    };
+    fetchHubs();
+  }, []);
 
-  // При смене выбранного проекта подгружаем его модули
-  useEffect(() => {
-    if (selectedProject) {
-      fetchModules(selectedProject.id);
-    } else {
-      setModules([]);
-    }
-  }, [selectedProject]);
+  const openForm = () => setShowCreateForm(true);
+  const closeForm = () => {
+    setShowCreateForm(false);
+    setNewHubName("");
+    setNewHubDescription("");
+  };
 
-  // Создание нового проекта
-  const handleCreateProject = async () => {
-    if (!newProjectName.trim()) return;
+  const handleCreateHub = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newHubName.trim()) return;
+    const token = localStorage.getItem("token");
     try {
-      const response = await fetch("/api/projects", {
+      const response = await fetch(api.creaeProject(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newProjectName.trim(), companyId }),
+        headers: {
+          "Authorization": token ? `Bearer ${token}` : "",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: newHubName,
+          description: newHubDescription,
+        }),
       });
-      if (!response.ok) throw new Error("Ошибка при создании проекта");
-      const created: Project = await response.json();
-      setProjects((prev) => [...prev, created]);
-      setNewProjectName("");
-      setSelectedProject(created);
-    } catch (err: any) {
-      setErrorProjects(err.message || "Неизвестная ошибка");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Ошибка создания хаба", errorData);
+        return;
+      }
+
+      const createdHub = await response.json();
+      setHubs([...hubs, createdHub]);
+      closeForm();
+
+    } catch (error) {
+      console.error("Ошибка сети при создании хаба", error);
     }
   };
 
-  // Создание нового модуля
-  const handleCreateModule = async () => {
-    if (!selectedProject || !newModuleName.trim()) return;
-    try {
-      const response = await fetch("/api/modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newModuleName.trim(), projectId: selectedProject.id }),
-      });
-      if(!response.ok) throw new Error("Ошибка при создании модуля");
-      const created: Module = await response.json();
-      setModules((prev) => [...prev, created]);
-      setNewModuleName("");
-    } catch (err: any) {
-      setErrorModules(err.message || "Неизвестная ошибка");
-    }
-  };
 
   return (
-    <Container>
-      <h2>Проекты</h2>
-      {loadingProjects && <Spinner animation="border" />}
-      {errorProjects && <Alert variant="danger">{errorProjects}</Alert>}
-
-      <ListGroup className="mb-3">
-        {projects.map((project) => (
-          <ListGroup.Item
-            key={project.id}
-            active={selectedProject?.id === project.id}
-            onClick={() => setSelectedProject(project)}
+    <Container className="mt-5">
+      <h2 className="mb-4">Список хабов проектов</h2>
+      <Row xs={1} sm={2} md={3} lg={4} className="g-4">
+        {hubs.map((hub) => (
+          <Col key={hub.id}>
+            <Card className="h-100 shadow-sm">
+              <Card.Body>
+                <Card.Title className="fw-bold">{hub.name}</Card.Title>
+                <Card.Text className="text-muted">{hub.description || "Без описания"}</Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+        {/* Карточка с кнопкой "+" */}
+        <Col>
+          <Card
+            className="h-100 d-flex align-items-center justify-content-center shadow-sm text-center"
             style={{ cursor: "pointer" }}
+            onClick={openForm}
           >
-            {project.name} {project.description && <small className="text-muted">- {project.description}</small>}
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
+            <Card.Body className="d-flex flex-column justify-content-center align-items-center">
+              <Button variant="outline-primary" size="lg" className="rounded-circle mb-3" style={{ width: "4rem", height: "4rem", fontSize: "2rem" }}>
+                +
+              </Button>
+              <div className="fw-semibold text-primary">Создать хаб</div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-      {role === "ADMIN" && (
-        <Form onSubmit={e => { e.preventDefault(); handleCreateProject(); }}>
-          <Row className="align-items-center mb-4">
-            <Col xs="auto">
+      {/* Модальное окно с формой */}
+      <Modal show={showCreateForm} onHide={closeForm} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Создать новый хаб</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleCreateHub}>
+            <Form.Group controlId="hubName" className="mb-3">
+              <Form.Label>Название</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Название проекта"
-                value={newProjectName}
-                onChange={e => setNewProjectName(e.target.value)}
+                placeholder="Введите название хаба"
+                value={newHubName}
+                onChange={(e) => setNewHubName(e.target.value)}
+                required
+                autoFocus
               />
-            </Col>
-            <Col xs="auto">
-              <Button type="submit">Создать проект</Button>
-            </Col>
-          </Row>
-        </Form>
-      )}
-
-      <h2>Модули проекта: {selectedProject?.name || "не выбран"}</h2>
-      {loadingModules && <Spinner animation="border" />}
-      {errorModules && <Alert variant="danger">{errorModules}</Alert>}
-
-      <ListGroup className="mb-3">
-        {modules.map((mod) => (
-          <ListGroup.Item key={mod.id}>{mod.name}</ListGroup.Item>
-        ))}
-      </ListGroup>
-
-      {role === "ADMIN" && selectedProject && (
-        <Form onSubmit={e => { e.preventDefault(); handleCreateModule(); }}>
-          <Row className="align-items-center">
-            <Col xs="auto">
+            </Form.Group>
+            <Form.Group controlId="hubDescription" className="mb-3">
+              <Form.Label>Описание</Form.Label>
               <Form.Control
-                type="text"
-                placeholder="Название модуля"
-                value={newModuleName}
-                onChange={e => setNewModuleName(e.target.value)}
+                as="textarea"
+                rows={3}
+                placeholder="Введите описание (необязательно)"
+                value={newHubDescription}
+                onChange={(e) => setNewHubDescription(e.target.value)}
               />
-            </Col>
-            <Col xs="auto">
-              <Button type="submit">Создать модуль</Button>
-            </Col>
-          </Row>
-        </Form>
-      )}
+            </Form.Group>
+            <div className="d-flex justify-content-end">
+              <Button variant="secondary" onClick={closeForm} className="me-2">
+                Отмена
+              </Button>
+              <Button variant="primary" type="submit">
+                Создать
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };
-
 
 export default HubList;

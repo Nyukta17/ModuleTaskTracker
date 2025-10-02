@@ -1,10 +1,10 @@
 package com.example.SmartNewsHub.service;
-
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -16,43 +16,59 @@ public class JWTservice {
     private final SecretKey secretKey = Keys.hmacShaKeyFor("ОченьДлинныйСекретныйКлючДляПодписиJWT".getBytes());
     private final long expirationTime = 3600000; // 1 час
 
-    public String generateToken(String company, String role){
+    public String generateToken(String username, String role, Long companyId){
         return Jwts.builder()
-                .setSubject(company)
+                .setSubject(username)
                 .claim("role", role)
+                .claim("companyId", companyId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token){
+    // Проверка валидности токена
+    public boolean validateToken(String token, UserDetails userDetails){
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
+            // Парсим токен, выбрасывает исключение если invalid
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
                     .build()
-                    .parseSignedClaims(token);
-            return true;
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            String usernameFromToken = claims.getSubject();
+            Date expiration = claims.getExpiration();
+
+            return (usernameFromToken.equals(userDetails.getUsername()) && expiration.after(new Date()));
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    public String getCompanyName(String token){
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.getSubject();
+
+    // Извлечение username (subject) из токена
+    public String extractUsername(String token){
+        return extractAllClaims(token).getSubject();
     }
 
-    public String getRole(String token){
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
+    // Извлечение companyId из токена
+    public Long extractCompanyId(String token){
+        Object claim = extractAllClaims(token).get("companyId");
+        if (claim instanceof Integer) {
+            return ((Integer) claim).longValue();
+        } else if (claim instanceof Long) {
+            return (Long) claim;
+        }
+        return null;
+    }
+
+    // Общий метод извлечения claims
+    private Claims extractAllClaims(String token){
+        return Jwts.parser()
+                .setSigningKey(secretKey)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.get("role", String.class);
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

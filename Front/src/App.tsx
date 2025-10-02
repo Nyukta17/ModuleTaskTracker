@@ -1,93 +1,58 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+// App.tsx
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import AuthForm from "./components/AuthForm";
 import HubList from "./components/HubList";
-import { jwtDecode } from "jwt-decode";
 
-interface JwtPayload {
-  sub: string;
-  role: string;      // например "ROLE_ADMIN"
-  companyId: number;
-  exp: number;
-}
+// Заглушка HubList (замените на реальный компонент)
 
-type UserRole = "ADMIN" | "USER";  // Для HubList
 
-function App() {
-  const [token, setToken] = useState<string | null>(localStorage.getItem("jwtToken"));
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [companyId, setCompanyId] = useState<number | null>(null);
+// Компонент ProtectedRoute, который проверяет наличие токена
+const ProtectedRoute: React.FC<{ token: string | null }> = ({ token }) => {
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+};
 
-  useEffect(() => {
-    if (token) {
-      try {
-        const decoded: JwtPayload = jwtDecode(token);
-        // Преобразуем "ROLE_ADMIN" в "ADMIN"
-        const parsedRole = decoded.role.replace("ROLE_", "") as UserRole;
-        setRole(parsedRole);
-        setCompanyId(decoded.companyId);
-      } catch (error) {
-        console.error("Invalid token", error);
-        setToken(null);
-        localStorage.removeItem("jwtToken");
-      }
-    } else {
-      setRole(null);
-      setCompanyId(null);
-    }
-  }, [token]);
+const App: React.FC = () => {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("jwtToken"));
+  const [role, setRole] = useState<string | null>(null);
 
-  const handleLogin = (newToken: string) => {
-    setToken(newToken);
+  // Функция входа - получает токен и роль из AuthForm
+  const handleLogin = (newToken: string, newRole: string) => {
     localStorage.setItem("jwtToken", newToken);
+    setToken(newToken);
+    setRole(newRole);
   };
 
+  // Функция выхода
   const handleLogout = () => {
+    localStorage.removeItem("jwtToken");
     setToken(null);
     setRole(null);
-    setCompanyId(null);
-    localStorage.removeItem("jwtToken");
   };
 
-  // Отдельный компонент Logout
-  const Logout: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-    const navigate = useNavigate();
-
-    useEffect(() => {
-      onLogout();
-      navigate("/", { replace: true });
-    }, [navigate, onLogout]);
-
-    return <div>Выход...</div>;
-  };
+  // Если нужно, можно добавить проверку валидности токена здесь
+  // useEffect(() => {...}, [token]);
 
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            token ? (
-              <Navigate to="/hublist" replace />
-            ) : (
-              <AuthForm onLogin={handleLogin} />
-            )
-          }
-        />
-        <Route
-          path="/hublist"
-          element={
-            token && role && companyId ? (
-              <HubList role={role} companyId={companyId} />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
+        {/* Маршрут входа - "/" или "/login" */}
+        <Route path="/" element={token ? <Navigate to="/hublist" replace /> : <AuthForm onLogin={handleLogin} />} />
+        <Route path="/login" element={token ? <Navigate to="/hublist" replace /> : <AuthForm onLogin={handleLogin} />} />
+
+        {/* Защищённый маршрут для HubList */}
+        <Route element={<ProtectedRoute token={token} />}>
+          <Route path="/hublist" element={<HubList />} />
+        </Route>
+
+        {/* Редирект всех прочих путей на вход */}
+        <Route path="*" element={<Navigate to={token ? "/hublist" : "/login"} replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;

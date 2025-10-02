@@ -1,12 +1,16 @@
 class ApiRoute {
-  private BASE_URL = "http://localhost:8080/api/auth";
+  private BASE_URL = "http://localhost:8080/api";
 
   login() {
-    return `${this.BASE_URL}/login`;   // POST /api/auth/login
+    return `${this.BASE_URL}/auth/login`;   // POST /api/auth/login
   }
 
   register() {
-    return `${this.BASE_URL}/register`; // POST /api/auth/register
+    return `${this.BASE_URL}/auth/register`; // POST /api/auth/register
+  }
+
+  creaeProject(){
+    return `${this.BASE_URL}/projects/createProject`
   }
 
   // В дальнейшем добавьте здесь другие пути API
