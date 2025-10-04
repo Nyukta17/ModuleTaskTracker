@@ -1,29 +1,83 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Form, Modal } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectHub {
   id: number;
   name: string;
   description?: string;
 }
-const api = new ApiRoute()
+
+const allModules = ["Новости", "Календарь", "Аналитика", "Трекер времени"];
+
+const api = new ApiRoute();
+
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 const HubList: React.FC = () => {
   const [hubs, setHubs] = useState<ProjectHub[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newHubName, setNewHubName] = useState("");
   const [newHubDescription, setNewHubDescription] = useState("");
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Заглушка для загрузки проектов
-    const fetchHubs = async () => {
-      setHubs([
-        { id: 1, name: "Проект Alpha", description: "Описание проекта Alpha" },
-        { id: 2, name: "Проект Beta", description: "Описание проекта Beta" },
-        { id: 3, name: "Проект Gamma", description: "Описание проекта Gamma" },
-      ]);
-    };
+    const token = localStorage.getItem("jwtToken");
+    const payload = token ? parseJwt(token) : null;
+    if (payload && payload.role) {
+      setUserRole(payload.role);
+    } else {
+      setUserRole(null);
+    }
+  }, []);
+
+  const goToHub = (hubId: number) => {
+    navigate(`/hub/${hubId}`);
+  };
+
+  useEffect(() => {
+    async function fetchHubs() {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const response = await fetch(api.getAllProjects(), {
+          method: "GET",
+          headers,
+        });
+
+        if (!response.ok) {
+          console.error("Ошибка получения списка хабов");
+          return;
+        }
+
+        const hubsData = await response.json();
+        setHubs(hubsData);
+      } catch (error) {
+        console.error("Ошибка сети при получении хабов", error);
+      }
+    }
+
     fetchHubs();
   }, []);
 
@@ -32,27 +86,45 @@ const HubList: React.FC = () => {
     setShowCreateForm(false);
     setNewHubName("");
     setNewHubDescription("");
+    setSelectedModules([]);
+  };
+
+  const toggleModule = (moduleName: string) => {
+    setSelectedModules(prev =>
+      prev.includes(moduleName)
+        ? prev.filter(m => m !== moduleName)
+        : [...prev, moduleName]
+    );
   };
 
   const handleCreateHub = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newHubName.trim()) return;
-    const token = localStorage.getItem("token");
+
     try {
+      const token = localStorage.getItem("jwtToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const response = await fetch(api.creaeProject(), {
         method: "POST",
-        headers: {
-          "Authorization": token ? `Bearer ${token}` : "",
-          "Content-Type": "application/json"
-        },
+        headers,
         body: JSON.stringify({
           name: newHubName,
           description: newHubDescription,
+          modules: selectedModules, // отправляем выбранные модули
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { message: "Ошибка сервера или пустой ответ" };
+        }
         console.error("Ошибка создания хаба", errorData);
         return;
       }
@@ -60,20 +132,18 @@ const HubList: React.FC = () => {
       const createdHub = await response.json();
       setHubs([...hubs, createdHub]);
       closeForm();
-
     } catch (error) {
       console.error("Ошибка сети при создании хаба", error);
     }
   };
 
-
   return (
     <Container className="mt-5">
       <h2 className="mb-4">Список хабов проектов</h2>
       <Row xs={1} sm={2} md={3} lg={4} className="g-4">
-        {hubs.map((hub) => (
-          <Col key={hub.id}>
-            <Card className="h-100 shadow-sm">
+        {hubs.map(hub => (
+          <Col key={hub.id} onClick={() => goToHub(hub.id)}>
+            <Card className="h-100 shadow-sm" style={{ cursor: "pointer" }}>
               <Card.Body>
                 <Card.Title className="fw-bold">{hub.name}</Card.Title>
                 <Card.Text className="text-muted">{hub.description || "Без описания"}</Card.Text>
@@ -81,24 +151,31 @@ const HubList: React.FC = () => {
             </Card>
           </Col>
         ))}
-        {/* Карточка с кнопкой "+" */}
-        <Col>
-          <Card
-            className="h-100 d-flex align-items-center justify-content-center shadow-sm text-center"
-            style={{ cursor: "pointer" }}
-            onClick={openForm}
-          >
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center">
-              <Button variant="outline-primary" size="lg" className="rounded-circle mb-3" style={{ width: "4rem", height: "4rem", fontSize: "2rem" }}>
-                +
-              </Button>
-              <div className="fw-semibold text-primary">Создать хаб</div>
-            </Card.Body>
-          </Card>
-        </Col>
+
+        {/* Кнопка создания только для админ */}
+        {userRole === "ROLE_ADMIN" && (
+          <Col>
+            <Card
+              className="h-100 d-flex align-items-center justify-content-center shadow-sm text-center"
+              style={{ cursor: "pointer" }}
+              onClick={openForm}
+            >
+              <Card.Body className="d-flex flex-column justify-content-center align-items-center">
+                <Button
+                  variant="outline-primary"
+                  size="lg"
+                  className="rounded-circle mb-3"
+                  style={{ width: "4rem", height: "4rem", fontSize: "2rem" }}
+                >
+                  +
+                </Button>
+                <div className="fw-semibold text-primary">Создать хаб</div>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
       </Row>
 
-      {/* Модальное окно с формой */}
       <Modal show={showCreateForm} onHide={closeForm} centered>
         <Modal.Header closeButton>
           <Modal.Title>Создать новый хаб</Modal.Title>
@@ -116,6 +193,7 @@ const HubList: React.FC = () => {
                 autoFocus
               />
             </Form.Group>
+
             <Form.Group controlId="hubDescription" className="mb-3">
               <Form.Label>Описание</Form.Label>
               <Form.Control
@@ -126,6 +204,20 @@ const HubList: React.FC = () => {
                 onChange={(e) => setNewHubDescription(e.target.value)}
               />
             </Form.Group>
+
+            <Form.Group controlId="hubModules" className="mb-3">
+              <Form.Label>Выберите модули</Form.Label>
+              {allModules.map(module => (
+                <Form.Check
+                  key={module}
+                  type="checkbox"
+                  label={module}
+                  checked={selectedModules.includes(module)}
+                  onChange={() => toggleModule(module)}
+                />
+              ))}
+            </Form.Group>
+
             <div className="d-flex justify-content-end">
               <Button variant="secondary" onClick={closeForm} className="me-2">
                 Отмена

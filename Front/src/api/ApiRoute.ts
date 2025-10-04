@@ -12,6 +12,9 @@ class ApiRoute {
   creaeProject(){
     return `${this.BASE_URL}/projects/createProject`
   }
+  getAllProjects(){
+    return `${this.BASE_URL}/projects/getAllProject`;
+  }
 
   // В дальнейшем добавьте здесь другие пути API
 }

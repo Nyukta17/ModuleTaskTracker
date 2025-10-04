@@ -1,15 +1,33 @@
 // App.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import AuthForm from "./components/AuthForm";
 import HubList from "./components/HubList";
+import { jwtDecode } from "jwt-decode";
+import Hub from "./components/Hub";
 
-// Заглушка HubList (замените на реальный компонент)
 
+interface TokenPayload {
+  exp: number;
+}
 
-// Компонент ProtectedRoute, который проверяет наличие токена
-const ProtectedRoute: React.FC<{ token: string | null }> = ({ token }) => {
-  if (!token) {
+const isTokenValid = (token: string | null): boolean => {
+  if (!token) return false;
+
+  try {
+    const decoded = jwtDecode<TokenPayload>(token);
+    if (!decoded.exp) return false;
+
+    const currentTime = Date.now() / 1000; // в секундах
+    return decoded.exp > currentTime;
+  } catch (error) {
+    return false;
+  }
+};
+
+const ProtectedRoute: React.FC<{ token: string | null; onLogout: () => void }> = ({ token, onLogout }) => {
+  if (!token || !isTokenValid(token)) {
+    onLogout(); // очистить токен при невалидности
     return <Navigate to="/login" replace />;
   }
   return <Outlet />;
@@ -17,39 +35,37 @@ const ProtectedRoute: React.FC<{ token: string | null }> = ({ token }) => {
 
 const App: React.FC = () => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("jwtToken"));
-  const [role, setRole] = useState<string | null>(null);
+  
 
-  // Функция входа - получает токен и роль из AuthForm
-  const handleLogin = (newToken: string, newRole: string) => {
+  // Функция входа - записывает токен и роль
+  const handleLogin = (newToken: string) => {
     localStorage.setItem("jwtToken", newToken);
     setToken(newToken);
-    setRole(newRole);
+   
   };
 
-  // Функция выхода
+  // Функция выхода - удаляет токен и роль
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
     setToken(null);
-    setRole(null);
+    
   };
-
-  // Если нужно, можно добавить проверку валидности токена здесь
-  // useEffect(() => {...}, [token]);
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Маршрут входа - "/" или "/login" */}
+        {/* Маршрут входа */}
         <Route path="/" element={token ? <Navigate to="/hublist" replace /> : <AuthForm onLogin={handleLogin} />} />
         <Route path="/login" element={token ? <Navigate to="/hublist" replace /> : <AuthForm onLogin={handleLogin} />} />
 
-        {/* Защищённый маршрут для HubList */}
-        <Route element={<ProtectedRoute token={token} />}>
+        {/* Защищённый маршрут */}
+        <Route element={<ProtectedRoute token={token} onLogout={handleLogout} />}>
           <Route path="/hublist" element={<HubList />} />
         </Route>
 
-        {/* Редирект всех прочих путей на вход */}
+        {/* Редирект всех прочих путей */}
         <Route path="*" element={<Navigate to={token ? "/hublist" : "/login"} replace />} />
+        <Route path="/hub/:id" element={<Hub/>} />
       </Routes>
     </BrowserRouter>
   );
