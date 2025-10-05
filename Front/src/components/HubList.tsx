@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Card, Button, Form, Modal } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
 import { useNavigate } from "react-router-dom";
@@ -48,38 +48,38 @@ const HubList: React.FC = () => {
     }
   }, []);
 
+  const fetchHubs = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const response = await fetch(api.getAllProjects(), {
+        method: "GET",
+        headers,
+      });
+
+      if (!response.ok) {
+        console.error("Ошибка получения списка хабов");
+        return;
+      }
+
+      const hubsData = await response.json();
+      setHubs(hubsData);
+    } catch (error) {
+      console.error("Ошибка сети при получении хабов", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHubs();
+  }, [fetchHubs]);
+
   const goToHub = (hubId: number) => {
     navigate(`/hub/${hubId}`);
   };
-
-  useEffect(() => {
-    async function fetchHubs() {
-      try {
-        const token = localStorage.getItem("jwtToken");
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-
-        const response = await fetch(api.getAllProjects(), {
-          method: "GET",
-          headers,
-        });
-
-        if (!response.ok) {
-          console.error("Ошибка получения списка хабов");
-          return;
-        }
-
-        const hubsData = await response.json();
-        setHubs(hubsData);
-      } catch (error) {
-        console.error("Ошибка сети при получении хабов", error);
-      }
-    }
-
-    fetchHubs();
-  }, []);
 
   const openForm = () => setShowCreateForm(true);
   const closeForm = () => {
@@ -114,7 +114,7 @@ const HubList: React.FC = () => {
         body: JSON.stringify({
           name: newHubName,
           description: newHubDescription,
-          modules: selectedModules, // отправляем выбранные модули
+          modules: selectedModules,
         }),
       });
 
@@ -129,8 +129,9 @@ const HubList: React.FC = () => {
         return;
       }
 
-      const createdHub = await response.json();
-      setHubs([...hubs, createdHub]);
+      // После успешного создания загрузить обновленный список хабов
+      await fetchHubs();
+
       closeForm();
     } catch (error) {
       console.error("Ошибка сети при создании хаба", error);
@@ -140,6 +141,12 @@ const HubList: React.FC = () => {
   return (
     <Container className="mt-5">
       <h2 className="mb-4">Список хабов проектов</h2>
+      {userRole === "ROLE_ADMIN" && (
+        <Button onClick={() => navigate('/admin')} variant="outline-danger" className="mb-3">
+          Админ-панель
+        </Button>
+      )}
+
       <Row xs={1} sm={2} md={3} lg={4} className="g-4">
         {hubs.map(hub => (
           <Col key={hub.id} onClick={() => goToHub(hub.id)}>

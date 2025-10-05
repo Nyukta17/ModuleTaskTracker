@@ -1,60 +1,60 @@
-/* index.css */
-
-/* Сброс и базовые стили */
-body, html, #root {
-  height: 100%;
-  margin: 0;
+/* Ограничиваем максимальную ширину основного контейнера */
+main {
+  max-width: 900px; /* уменьшили с 1200px */
+  margin: 0 auto;
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa; /* светлый фон */
-  color: #212529;
+  color: #333;
 }
 
-/* Основные отступы */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  margin-bottom: 1rem;
+/* Уменьшаем отступы между элементами */
+main > * + * {
+  margin-top: 0.75rem; /* немного меньше */
 }
 
-/* Кнопки - плавное наведение */
+/* Кнопки меньшего размера */
 button, .btn {
-  transition: background-color 0.3s ease;
+  font-size: 0.875rem; /* 14px */
+  padding: 0.375rem 0.75rem;
 }
 
-/* Карточки с тенью для выделения */
+/* Поля ввода с фиксированной высотой */
+input, textarea, select {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.5rem;
+  height: 2rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Для карточек убрать растяжение по ширине */
 .card {
-  border-radius: 8px;
-  transition: box-shadow 0.3s ease;
+  max-width: 300px; /* ограничиваем ширину */
+  margin: 0 auto;
 }
 
-.card:hover {
-  box-shadow: 0 12px 20px rgba(0,0,0,0.15);
-}
+/* Отзывчивость: ухудшаем растяжение на маленьких экранах */
+@media (max-width: 768px) {
+  main {
+    max-width: 100%;
+    padding: 0.75rem;
+  }
 
-/* Формы: плавное выделение фокуса */
-.form-control:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
-  outline: none;
-}
+  .card {
+    max-width: 100%;
+  }
 
-/* Центрирование текста и элементов */
-.text-center {
-  text-align: center;
-}
+  button, .btn {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
 
-/* Ссылки */
-a {
-  color: #0d6efd;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* Отступы для контейнера */
-.container {
-  max-width: 1200px;
-  padding-left: 15px;
-  padding-right: 15px;
+  input, textarea, select {
+    height: auto;
+    padding: 0.5rem;
+  }
 }

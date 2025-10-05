@@ -14,12 +14,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -65,5 +70,21 @@ public class SecurityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+    @PostMapping("/generate-registration-link")
+    public ResponseEntity<String> generateRegistrationLink(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody Map<String, String> body) {
+        Instant now = Instant.now();
+        Date expiryDate = Date.from(now.plus(1, ChronoUnit.DAYS)); // срок жизни 1 день
+
+        String token = jwtService.generateTokenForRegistration(
+                Map.of("registration", true), // оставляем claims без exp
+                expiryDate // срок жизни передаем отдельно
+        );
+
+        String registrationUrl = "http://localhost:5173/register?token=" + token;
+
+        return ResponseEntity.ok(registrationUrl);
+    }
+
+
 
 }

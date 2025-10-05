@@ -8,6 +8,10 @@ class ApiRoute {
   register() {
     return `${this.BASE_URL}/auth/register`; // POST /api/auth/register
   }
+  generateRegLink(){
+    return `${this.BASE_URL}/auth/generate-registration-link`
+  }
+
 
   creaeProject(){
     return `${this.BASE_URL}/projects/createProject`
@@ -15,7 +19,7 @@ class ApiRoute {
   getAllProjects(){
     return `${this.BASE_URL}/projects/getAllProject`;
   }
-
+  
   // В дальнейшем добавьте здесь другие пути API
 }
 
