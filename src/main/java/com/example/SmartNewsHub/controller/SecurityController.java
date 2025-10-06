@@ -4,6 +4,7 @@ import com.example.SmartNewsHub.details.CustomUserDetails;
 import com.example.SmartNewsHub.dto.JWTResponse;
 import com.example.SmartNewsHub.dto.LoginRequest;
 import com.example.SmartNewsHub.dto.RegisterRequest;
+import com.example.SmartNewsHub.dto.RegistrationEmployee;
 import com.example.SmartNewsHub.service.JWTservice;
 import com.example.SmartNewsHub.service.UserService;
 import jakarta.validation.Valid;
@@ -77,12 +78,31 @@ public class SecurityController {
 
         String token = jwtService.generateTokenForRegistration(
                 Map.of("registration", true), // оставляем claims без exp
-                expiryDate // срок жизни передаем отдельно
+                expiryDate,
+                customUserDetails.getCompanyId()// срок жизни передаем отдельно
         );
 
         String registrationUrl = "http://localhost:5173/register?token=" + token;
 
         return ResponseEntity.ok(registrationUrl);
+    }
+    @PostMapping("/register-user")
+    public ResponseEntity<?> registrationEmployee(@RequestBody RegistrationEmployee registrationEmployee){
+        try {
+            // Валидация токена приглашения, переданного например в registrationEmployee.getToken()
+            if (!jwtService.validateToken(registrationEmployee.getToken())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Невалидный токен");
+            }
+
+            // Извлечь необходимые данные из токена (например, companyId)
+            Long companyId = jwtService.extractCompanyId(registrationEmployee.getToken());
+            registrationEmployee.setCompany_id(companyId);
+
+            userService.registerEmployee(registrationEmployee);
+            return ResponseEntity.ok("Регистрация успешна");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
 

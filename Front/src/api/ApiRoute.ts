@@ -8,6 +8,9 @@ class ApiRoute {
   register() {
     return `${this.BASE_URL}/auth/register`; // POST /api/auth/register
   }
+  registerEmployee(){
+    return `${this.BASE_URL}/auth/register-user`
+  }
   generateRegLink(){
     return `${this.BASE_URL}/auth/generate-registration-link`
   }

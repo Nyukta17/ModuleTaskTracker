@@ -29,9 +29,10 @@ public class JWTservice {
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
-    public String generateTokenForRegistration(Map<String, Object> claims, Date expiryDate) {
+    public String generateTokenForRegistration(Map<String, Object> claims, Date expiryDate, Long companyId) {
         return Jwts.builder()
                 .setClaims(claims)
+                .claim("companyId",companyId)
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .signWith(secretKey, SignatureAlgorithm.HS512)
@@ -56,6 +57,20 @@ public class JWTservice {
             return (usernameFromToken.equals(userDetails.getUsername()) && expiration.after(new Date()));
         } catch (JwtException | IllegalArgumentException e) {
             return false;
+        }
+    }
+    public boolean validateToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Date expiration = claims.getExpiration();
+            return expiration.after(new Date()); // Проверка, что токен не истек
+        } catch (JwtException | IllegalArgumentException e) {
+            return false; // Токен невалидный
         }
     }
 

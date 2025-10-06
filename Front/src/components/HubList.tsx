@@ -9,7 +9,7 @@ interface ProjectHub {
   description?: string;
 }
 
-const allModules = ["Новости", "Календарь", "Аналитика", "Трекер времени"];
+const allModules = ["NEWS", "CALENDAR", "ANALYTICS", "TIME_TRACKER"];
 
 const api = new ApiRoute();
 
@@ -117,8 +117,7 @@ const HubList: React.FC = () => {
           modules: selectedModules,
         }),
       });
-
-      if (!response.ok) {
+        if (!response.ok) {
         let errorData;
         try {
           errorData = await response.json();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button, Form, Alert, Container, Row, Col, Card } from "react-bootstrap";
+import ApiRoute from "../api/ApiRoute";
 
 const Registration: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -12,7 +13,7 @@ const Registration: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const api = new ApiRoute();
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -30,16 +31,17 @@ const Registration: React.FC = () => {
       setError("Пароль должен содержать минимум 6 символов");
       return;
     }
+    
 
     setLoading(true);
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch(api.registerEmployee(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           username,
           password,
-          token, // передаем приглашение JWT токен на бэкенд
+          token
         }),
       });
 

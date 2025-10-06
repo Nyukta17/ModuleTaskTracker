@@ -1,10 +1,13 @@
 package com.example.SmartNewsHub.dto;
 
+import java.util.List;
+
 public class ProjectDTO {
     private Long id;
     private String name;
     private String description;
     private Long companyId;
+    private List<String> modules;
 
     public Long getId() {
         return id;
@@ -12,6 +15,14 @@ public class ProjectDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public List<String> getModules() {
+        return modules;
+    }
+
+    public void setModules(List<String> modules) {
+        this.modules = modules;
     }
 
     public String getName() {
