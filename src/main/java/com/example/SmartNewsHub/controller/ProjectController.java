@@ -6,7 +6,6 @@ import com.example.SmartNewsHub.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,18 +21,17 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
-    @PreAuthorize("hasRole('ADMIN', 'MANAGER')")
     @PostMapping("/createProject")
     public ResponseEntity<ProjectDTO> createProject(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody ProjectDTO dto) {
-
-        dto.setCompanyId(customUserDetails.getCompanyId());
-        ProjectDTO created = projectService.createProject(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        System.out.println("круто " + customUserDetails.getUsername() +"из "+customUserDetails.getCompanyId());
+        return null;
+//        ProjectDTO created = projectService.createProject(dto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping("/getAllProject")
-    public ResponseEntity<List<ProjectDTO>> getProjectsByCompany(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        List<ProjectDTO> projects = projectService.getProjectsByCompany(customUserDetails.getCompanyId());
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<List<ProjectDTO>> getProjectsByCompany(@PathVariable Long companyId) {
+        List<ProjectDTO> projects = projectService.getProjectsByCompany(companyId);
         return ResponseEntity.ok(projects);
     }
 }

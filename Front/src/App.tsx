@@ -5,6 +5,9 @@ import AuthForm from "./components/AuthForm";
 import HubList from "./components/HubList";
 import { jwtDecode } from "jwt-decode";
 import Hub from "./components/Hub";
+import AdminPanel from "./components/AdminPanel";
+import Registration from "./components/Registration";
+
 
 
 interface TokenPayload {
@@ -66,6 +69,8 @@ const App: React.FC = () => {
         {/* Редирект всех прочих путей */}
         <Route path="*" element={<Navigate to={token ? "/hublist" : "/login"} replace />} />
         <Route path="/hub/:id" element={<Hub/>} />
+        <Route path="/admin" element={<AdminPanel/>}/>
+        <Route path="/register" element={<Registration />} />
       </Routes>
     </BrowserRouter>
   );

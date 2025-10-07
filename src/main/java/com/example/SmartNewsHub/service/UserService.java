@@ -1,6 +1,7 @@
 package com.example.SmartNewsHub.service;
 
 import com.example.SmartNewsHub.dto.RegisterRequest;
+import com.example.SmartNewsHub.dto.RegistrationEmployee;
 import com.example.SmartNewsHub.model.Company;
 import com.example.SmartNewsHub.model.Role;
 import com.example.SmartNewsHub.model.Users;
@@ -61,6 +62,20 @@ public class UserService {
         user.setRoles(Set.of(role));
         user.setEnabled(true);
 
+        usersRepository.save(user);
+    }
+    public void registerEmployee(RegistrationEmployee employee){
+        if(usersRepository.findByUsername(employee.getUsername()).isPresent()){
+            throw  new IllegalArgumentException("Username is already taken");
+        } // Поменять логику, могут быть тёски
+        Company company = companyRepository.findById(employee.getCompany_id()).orElseThrow(()->new IllegalArgumentException("Company not found"));
+        Role role = roleRepository.findByName("USER").orElseThrow(()->new IllegalArgumentException("Role not found"));
+        Users user = new Users();
+        user.setUsername(employee.getUsername());
+        user.setRoles(Set.of(role));
+        user.setCompany(company);
+        user.setPassword(passwordEncoder.encode(employee.getPassword()));
+        user.setEnabled(true);
         usersRepository.save(user);
     }
 

@@ -3,11 +3,15 @@ package com.example.SmartNewsHub.service;
 import com.example.SmartNewsHub.dto.ProjectDTO;
 import com.example.SmartNewsHub.model.Company;
 import com.example.SmartNewsHub.model.Project;
+import com.example.SmartNewsHub.model.ProjectModule;
 import com.example.SmartNewsHub.repository.CompanyRepository;
+import com.example.SmartNewsHub.repository.ModuleRepository;
+import com.example.SmartNewsHub.repository.ProjectModuleRepository;
 import com.example.SmartNewsHub.repository.ProjectRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.SmartNewsHub.model.Module;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,10 +24,15 @@ public class ProjectService {
 
     private CompanyRepository companyRepository;
 
+    private ModuleRepository moduleRepository;
+    private ProjectModuleRepository projectModuleRepository;
+
     @Autowired
-    public ProjectService(ProjectRepository projectRepository,CompanyRepository companyRepository ){
+    public ProjectService(ProjectModuleRepository projectModuleRepository,ModuleRepository moduleRepository,ProjectRepository projectRepository,CompanyRepository companyRepository ){
         this.companyRepository=companyRepository;
         this.projectRepository =projectRepository;
+        this.moduleRepository = moduleRepository;
+        this.projectModuleRepository = projectModuleRepository;
 
     }
 
@@ -37,9 +46,29 @@ public class ProjectService {
         project.setDescription(dto.getDescription());
         project.setCompany(company);
 
-        Project saved = projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
 
-        return toDTO(saved);
+        // Находим модули из базы
+        List<Module> modules = moduleRepository.findByNameIn(dto.getModules());
+
+        // Создаем связки ProjectModule
+        List<ProjectModule> projectModules = modules.stream()
+                .map(module -> {
+                    ProjectModule pm = new ProjectModule();
+                    pm.setProject(savedProject);
+                    pm.setModule(module);
+                    return pm;
+                })
+                .collect(Collectors.toList());
+
+        // Сохраняем связи
+        projectModuleRepository.saveAll(projectModules);
+
+        // При необходимости установить список projectModules в savedProject и сохранить снова
+        savedProject.setProjectModules(projectModules);
+        projectRepository.save(savedProject);
+
+        return toDTO(savedProject);
     }
 
     @Transactional(readOnly = true)
