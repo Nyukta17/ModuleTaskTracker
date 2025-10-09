@@ -22,6 +22,9 @@ class ApiRoute {
   getAllProjects(){
     return `${this.BASE_URL}/projects/getAllProject`;
   }
+  getModuleForHub(id:number){
+    return `${this.BASE_URL}/projects/hub/${id}`
+  }
   
   // В дальнейшем добавьте здесь другие пути API
 }

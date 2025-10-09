@@ -26,4 +26,26 @@ public class ProjectModule {
 
     public Module getModule() { return module; }
     public void setModule(Module module) { this.module = module; }
+
+    @Override
+    public String toString() {
+        return "ProjectModule{" +
+                "id=" + id +
+                ", project=" + project.getId() +
+                ", module=" + module.getId() +
+                '}';
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProjectModule)) return false;
+        ProjectModule that = (ProjectModule) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
 }

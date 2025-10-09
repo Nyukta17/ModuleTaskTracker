@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import ApiRoute from "../api/ApiRoute";
 
 interface Module {
   id: number;
   name: string;
   // остальные поля модуля
 }
-
+const api = new ApiRoute;
 const Hub: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const hubId = Number(id);
@@ -26,7 +27,7 @@ const Hub: React.FC = () => {
         };
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const response = await fetch(api.(), {
+        const response = await fetch(api.getModuleForHub(hubId), {
           method: "GET",
           headers,
         });

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.example.SmartNewsHub.model.Module;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -78,8 +79,9 @@ public class ProjectService {
         return projects.stream().map(this::toDTO).collect(Collectors.toList());
     }
     public List<ModuleDTO> getModuleById(Long id){
-        List<Module> modules = moduleRepository.findByProject_Id(id);
-        return modules.stream().map(this::moduleDTO).collect(Collectors.toList());
+        Set<ProjectModule> modules = projectModuleRepository.findDistinctByProjectId(id);
+        modules.forEach(System.out::println);
+       return null;
     }
 
     private ProjectDTO toDTO(Project project) {
