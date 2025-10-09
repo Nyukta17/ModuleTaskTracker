@@ -1,5 +1,6 @@
 package com.example.SmartNewsHub.service;
 
+import com.example.SmartNewsHub.dto.ModuleDTO;
 import com.example.SmartNewsHub.dto.ProjectDTO;
 import com.example.SmartNewsHub.model.Company;
 import com.example.SmartNewsHub.model.Project;
@@ -76,6 +77,10 @@ public class ProjectService {
         List<Project> projects = projectRepository.findByCompanyId(companyId);
         return projects.stream().map(this::toDTO).collect(Collectors.toList());
     }
+    public List<ModuleDTO> getModuleById(Long id){
+        List<Module> modules = moduleRepository.findByProject_Id(id);
+        return modules.stream().map(this::moduleDTO).collect(Collectors.toList());
+    }
 
     private ProjectDTO toDTO(Project project) {
         ProjectDTO dto = new ProjectDTO();
@@ -85,4 +90,10 @@ public class ProjectService {
         dto.setCompanyId(project.getCompany().getId());
         return dto;
     }
+    private ModuleDTO moduleDTO(Module module){
+        ModuleDTO dto = new ModuleDTO();
+        dto.setId(module.getId());
+        dto.setName(module.getName());
+        return dto;
+    };
 }

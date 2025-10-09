@@ -1,6 +1,7 @@
 package com.example.SmartNewsHub.controller;
 
 import com.example.SmartNewsHub.details.CustomUserDetails;
+import com.example.SmartNewsHub.dto.ModuleDTO;
 import com.example.SmartNewsHub.dto.ProjectDTO;
 import com.example.SmartNewsHub.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,5 +33,11 @@ public class ProjectController {
     public ResponseEntity<List<ProjectDTO>> getProjectsByCompany(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         List<ProjectDTO> projects = projectService.getProjectsByCompany(customUserDetails.getCompanyId());
         return ResponseEntity.ok(projects);
+    }
+
+    @GetMapping("/hub/{id}")
+    public ResponseEntity<List<ModuleDTO>> getModuleForHub(@AuthenticationPrincipal CustomUserDetails customUserDetails,@PathVariable Long id){
+        List<ModuleDTO> modules = projectService.getModuleById(id);
+        return ResponseEntity.ok(modules);
     }
 }
