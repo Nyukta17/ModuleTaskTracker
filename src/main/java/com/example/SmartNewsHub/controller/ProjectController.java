@@ -23,15 +23,14 @@ public class ProjectController {
 
     @PostMapping("/createProject")
     public ResponseEntity<ProjectDTO> createProject(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody ProjectDTO dto) {
-        System.out.println("круто " + customUserDetails.getUsername() +"из "+customUserDetails.getCompanyId());
-        return null;
-//        ProjectDTO created = projectService.createProject(dto);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        dto.setCompanyId(customUserDetails.getCompanyId());
+        ProjectDTO created = projectService.createProject(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<ProjectDTO>> getProjectsByCompany(@PathVariable Long companyId) {
-        List<ProjectDTO> projects = projectService.getProjectsByCompany(companyId);
+    @GetMapping("/getAllProject")
+    public ResponseEntity<List<ProjectDTO>> getProjectsByCompany(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        List<ProjectDTO> projects = projectService.getProjectsByCompany(customUserDetails.getCompanyId());
         return ResponseEntity.ok(projects);
     }
 }
