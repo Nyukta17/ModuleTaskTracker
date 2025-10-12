@@ -68,7 +68,6 @@ public class ModuleService {
 
     private ModuleDTO toDTO(Module module) {
         ModuleDTO dto = new ModuleDTO();
-        dto.setId(module.getId());
         dto.setName(module.getName());
         return dto;
     }

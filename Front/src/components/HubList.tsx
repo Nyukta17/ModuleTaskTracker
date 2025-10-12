@@ -77,8 +77,8 @@ const HubList: React.FC = () => {
     fetchHubs();
   }, [fetchHubs]);
 
-  const goToHub = (hubId: number) => {
-    navigate(`/hub/${hubId}`);
+ const goToHub = (hubId: number, hubName: string) => {
+  navigate(`/hub/${hubId}`, { state: { projectName: hubName } });
   };
 
   const openForm = () => setShowCreateForm(true);
@@ -140,15 +140,10 @@ const HubList: React.FC = () => {
   return (
     <Container className="mt-5">
       <h2 className="mb-4">Список хабов проектов</h2>
-      {userRole === "ROLE_ADMIN" && (
-        <Button onClick={() => navigate('/admin')} variant="outline-danger" className="mb-3">
-          Админ-панель
-        </Button>
-      )}
 
       <Row xs={1} sm={2} md={3} lg={4} className="g-4">
         {hubs.map(hub => (
-          <Col key={hub.id} onClick={() => goToHub(hub.id)}>
+          <Col key={hub.id} onClick={() => goToHub(hub.id, hub.name)}>
             <Card className="h-100 shadow-sm" style={{ cursor: "pointer" }}>
               <Card.Body>
                 <Card.Title className="fw-bold">{hub.name}</Card.Title>

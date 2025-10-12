@@ -27,6 +27,26 @@ public class Module {
     public void setName(String name) {
         this.name = name;
     }
-    // геттеры и сеттеры
+
+    @Override
+    public String toString() {
+        return "Module{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Module)) return false;
+        Module module = (Module) o;
+        return id != null && id.equals(module.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return 31;
+    }
+
 }
 

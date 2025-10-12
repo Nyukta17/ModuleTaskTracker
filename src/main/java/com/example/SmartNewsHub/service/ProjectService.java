@@ -9,6 +9,8 @@ import com.example.SmartNewsHub.repository.CompanyRepository;
 import com.example.SmartNewsHub.repository.ModuleRepository;
 import com.example.SmartNewsHub.repository.ProjectModuleRepository;
 import com.example.SmartNewsHub.repository.ProjectRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class ProjectService {
 
 
+    private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
     private ProjectRepository projectRepository;
 
     private CompanyRepository companyRepository;
@@ -79,9 +82,10 @@ public class ProjectService {
         return projects.stream().map(this::toDTO).collect(Collectors.toList());
     }
     public List<ModuleDTO> getModuleById(Long id){
-        Set<ProjectModule> modules = projectModuleRepository.findDistinctByProjectId(id);
-        modules.forEach(System.out::println);
-       return null;
+        Set<Module> modules = projectModuleRepository.findDistinctModulesByProjectId(id);
+        return modules.stream()
+                .map(this::moduleDTO)
+                .collect(Collectors.toList());
     }
 
     private ProjectDTO toDTO(Project project) {
@@ -94,7 +98,6 @@ public class ProjectService {
     }
     private ModuleDTO moduleDTO(Module module){
         ModuleDTO dto = new ModuleDTO();
-        dto.setId(module.getId());
         dto.setName(module.getName());
         return dto;
     };
