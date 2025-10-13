@@ -1,0 +1,61 @@
+.prioriti-tasks-board {
+  position: relative;
+  height: 500px;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  background-color: #fffbea;
+  overflow: auto;
+  padding: 10px;
+  user-select: none;
+}
+
+.prioriti-sticker {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+  transition: box-shadow 0.2s ease, background-color 0.3s ease;
+  background-color: #fffa65;
+  border-radius: 8px;
+  position: relative;
+  padding-top: 25px;
+}
+
+.prioriti-sticker.done {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.prioriti-sticker.done .card-text {
+  text-decoration: line-through;
+}
+
+.prioriti-sticker-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 0 6px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 1;
+  color: #333;
+  opacity: 0.7;
+  user-select: none;
+}
+
+.prioriti-sticker-close:hover {
+  color: #d9534f;
+  opacity: 1;
+  text-decoration: none;
+}
+
+.autogrow-textarea {
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* Optional: обеспечить автоматический рост textarea при вводе */
+.autogrow-textarea:focus {
+  resize: none;
+}

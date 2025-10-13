@@ -1,23 +1,23 @@
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
+import "./NewsCardStyle.css";
 import ApiRoute from "../../../api/ApiRoute";
 
-const api = new ApiRoute;
 interface NewsCardProps {
   id: number;
   title: string;
-  content: string;
+  content?: string;
   createdAt?: string;
-  onDeleted: (id: number) => void;  // callback при удалении
-  onUpdated: (id: number, newTitle: string, newContent: string) => void; // callback при обновлении
+  onDeleted: (id: number) => void;
+  onUpdated: (id: number, newTitle: string, newContent: string) => void;
 }
 
 const MAX_PREVIEW_LENGTH = 150;
-
+const api = new ApiRoute;
 const NewsCard: React.FC<NewsCardProps> = ({
   id,
   title,
-  content,
+  content = "",
   createdAt,
   onDeleted,
   onUpdated,
@@ -30,19 +30,39 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   const canExpand = content.length > MAX_PREVIEW_LENGTH;
   const displayContent =
-    expanded || !canExpand
-      ? content
-      : content.slice(0, MAX_PREVIEW_LENGTH) + "...";
+    expanded || !canExpand ? content : content.slice(0, MAX_PREVIEW_LENGTH) + "...";
 
   const toggleExpand = () => {
     if (canExpand) {
       setExpanded(!expanded);
     }
   };
+  
+  const saveEdit = () => {
+    const token = localStorage.getItem("jwtToken");
+    fetch(api.updateNews(id), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify({ title: editTitle, content: editContent }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Ошибка ${res.status}: ${res.statusText}`);
+        return res.json();
+      })
+      .then((updatedNews) => {
+        onUpdated(id, editTitle, editContent);
+        setEditing(false);
+        setError(null);
+      })
+      .catch((e) => setError(e.message));
+  };
 
   const deleteNews = () => {
     const token = localStorage.getItem("jwtToken");
-    fetch("", {
+    fetch(api.deleteNews(id), {
       method: "DELETE",
       headers: {
         Authorization: "Bearer " + token,
@@ -54,86 +74,41 @@ const NewsCard: React.FC<NewsCardProps> = ({
       })
       .catch((e) => setError(e.message));
   };
-
-  const saveEdit = () => {
-    const token = localStorage.getItem("jwtToken");
-    fetch("", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({ title: editTitle, content: editContent }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Ошибка ${res.status}: ${res.statusText}`);
-        onUpdated(id, editTitle, editContent); 
-        setEditing(false);
-        setError(null);
-      })
-      .catch((e) => setError(e.message));
-  };
+  // Здесь можно добавить функции deleteNews и saveEdit с вызовом API
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: "1200px",
-        margin: "10px auto",
-        padding: "16px",
-        borderRadius: "8px",
-        boxSizing: "border-box",
-        cursor: canExpand ? "pointer" : "default",
-        border: "1px solid transparent",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        transition: "border-color 0.3s ease",
-        overflowWrap: "break-word",
-        whiteSpace: "normal",
-        position: "relative",
-      }}
-      onClick={toggleExpand}
-      onMouseEnter={(e) => {
-        if (canExpand) e.currentTarget.style.borderColor = "#007BFF";
-      }}
-      onMouseLeave={(e) => {
-        if (canExpand) e.currentTarget.style.borderColor = "transparent";
-      }}
-    >
+    <div className="news-card" onClick={toggleExpand} style={{ cursor: canExpand ? "pointer" : "default" }}>
       {editing ? (
         <>
           <input
             type="text"
+            className="edit-input"
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
-            style={{ width: "100%", marginBottom: 8 }}
             autoFocus
           />
           <textarea
+            className="edit-textarea"
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             rows={5}
-            style={{ width: "100%" }}
           />
-          <div style={{ marginTop: 8 }}>
-            <Button onClick={(e) => { e.stopPropagation(); saveEdit(); }}>Сохранить</Button>
+          <div className="buttons-row">
+            <Button onClick={(e) => { e.stopPropagation();  saveEdit()  }}>Сохранить</Button>
             <Button onClick={(e) => { e.stopPropagation(); setEditing(false); setError(null); }}>Отмена</Button>
           </div>
-          {error && <p style={{ color: "red" }}>{error}</p>}
+          {error && <p className="error-message">{error}</p>}
         </>
       ) : (
         <>
-          <h3 style={{ marginTop: 0 }}>{title}</h3>
-          <p style={{ marginBottom: "8px" }}>{displayContent}</p>
+          <h3>{title}</h3>
+          <p>{displayContent}</p>
           {createdAt && <small>Дата: {new Date(createdAt).toLocaleString()}</small>}
-          {canExpand && (
-            <div style={{ color: "#007BFF", marginTop: 10, fontWeight: "bold" }}>
-              {expanded ? "Свернуть" : "Читать далее"}
-            </div>
-          )}
+          {canExpand && <div className="expand-toggle">{expanded ? "Свернуть" : "Читать далее"}</div>}
           <div style={{ position: "absolute", top: 16, right: 16 }}>
             <Button
               onClick={(e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 setEditing(true);
               }}
               style={{ marginRight: 8 }}
@@ -144,14 +119,14 @@ const NewsCard: React.FC<NewsCardProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm("Удалить новость?")) {
-                  deleteNews();
+                   deleteNews()
                 }
               }}
             >
               Удалить
             </Button>
           </div>
-          {error && <p style={{ color: "red" }}>{error}</p>}
+          {error && <p className="error-message">{error}</p>}
         </>
       )}
     </div>

@@ -4,24 +4,27 @@ import NewsModuleComponent from "./Modules/NewsModuleComponent";
 import CalendarModuleComponent from "./Modules/CalendarModuleComponent";
 import AnalyticsModuleComponent from "./Modules/AnalyticsModuleComponent";
 import TimeTrackerModuleComponent from "./Modules/TimeTrackerModuleComponent";
+import TaskTrackerBaseComponent from "./Modules/TaskTrackerBaseComponent";
 
-const moduleComponents: Record<string, React.FC> = {
+const moduleComponents: Record<string, React.FC<any>> = {
   NEWS: NewsModuleComponent,
   CALENDAR: CalendarModuleComponent,
   ANALYTICS: AnalyticsModuleComponent,
   TIME_TRACKER: TimeTrackerModuleComponent,
+  BASE_MODULE: TaskTrackerBaseComponent,
 };
 
 interface Module {
-  id?: number; // id теперь необязательный, чтобы проверить
+  id?: number;
   name: string;
 }
 
 interface ModulesTabsProps {
   modules: Module[];
+  projectHubId: string; // передаем сюда projectHubId для TaskTrackerBaseComponent
 }
 
-const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules }) => {
+const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,7 +35,7 @@ const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules }) => {
     }
   }, [modules]);
 
-  if (!modules.length) {
+  if (modules.length === 0) {
     return <div>Нет модулей для отображения</div>;
   }
 
@@ -46,18 +49,20 @@ const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules }) => {
       unmountOnExit
     >
       {modules.map((mod, index) => {
-        // Используем индекс если id отсутствует, но лучше иметь id
         const key = mod.id !== undefined && mod.id !== null ? mod.id.toString() : `key-${index}`;
-
         const eventKey = key;
         const ModuleComponent = moduleComponents[mod.name.toUpperCase()];
 
         return (
           <Tab eventKey={eventKey} title={mod.name} key={key}>
-            <div style={{ padding: "10px" }}>
+            <div style={{ padding: 10 }}>
               <Suspense fallback={<div>Загрузка модуля...</div>}>
                 {ModuleComponent ? (
-                  <ModuleComponent />
+                  mod.name.toUpperCase() === "BASE_MODULE" ? (
+                    <ModuleComponent projectHubId={projectHubId} />
+                  ) : (
+                    <ModuleComponent />
+                  )
                 ) : (
                   <div>Компонент для модуля "{mod.name}" не найден</div>
                 )}

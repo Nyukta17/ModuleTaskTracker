@@ -27,6 +27,34 @@ class ApiRoute {
   }
   
   // В дальнейшем добавьте здесь другие пути API
+  getAllNewsCompany(){
+    return `${this.BASE_URL}/news/getAllNews`
+  }
+  createNewsCompany(){
+    return `${this.BASE_URL}/news/createNews`
+  }
+  updateNews(id:number){
+    return`${this.BASE_URL}/news/update/${id}`
+  }
+  deleteNews(id:number){
+    return`${this.BASE_URL}/news/delete/${id}`
+  }
+  //Calendar
+  getAllEvents() {
+    return `${this.BASE_URL}/calendar/getAllEvent`;
+  }
+
+  createEvent() {
+    return `${this.BASE_URL}/calendar/createEvent`;
+  }
+
+  updateEvent(id: number) {
+    return `${this.BASE_URL}/calendar/update/${id}`;
+  }
+
+  deleteEvent(id: number) {
+    return `${this.BASE_URL}/calendar/delete/${id}`;
+  }
 }
 
 export default ApiRoute;

@@ -65,4 +65,15 @@ public class News {
         this.createdAt = createdAt;
     }
     // геттеры и сеттеры
+
+    @Override
+    public String toString() {
+        return "News{" +
+                "id=" + id +
+                ", company=" + company +
+                ", title='" + title + '\'' +
+                ", content='" + content + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

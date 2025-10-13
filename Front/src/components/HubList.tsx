@@ -77,8 +77,8 @@ const HubList: React.FC = () => {
     fetchHubs();
   }, [fetchHubs]);
 
- const goToHub = (hubId: number, hubName: string) => {
-  navigate(`/hub/${hubId}`, { state: { projectName: hubName } });
+  const goToHub = (hubId: number, hubName: string) => {
+    navigate(`/hub/${hubId}`, { state: { projectName: hubName } });
   };
 
   const openForm = () => setShowCreateForm(true);
@@ -108,16 +108,22 @@ const HubList: React.FC = () => {
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
+      // Если пользователь не выбрал модули, отправляем "BASE_MODULE" по умолчанию
+     const modulesToSend = selectedModules.includes("BASE_MODULE")
+      ? selectedModules
+      : ["BASE_MODULE", ...selectedModules];
+
       const response = await fetch(api.creaeProject(), {
         method: "POST",
         headers,
         body: JSON.stringify({
           name: newHubName,
           description: newHubDescription,
-          modules: selectedModules,
+          modules: modulesToSend,
         }),
       });
-        if (!response.ok) {
+
+      if (!response.ok) {
         let errorData;
         try {
           errorData = await response.json();
@@ -153,7 +159,7 @@ const HubList: React.FC = () => {
           </Col>
         ))}
 
-        {/* Кнопка создания только для админ */}
+        {/* Кнопка создания только для админа */}
         {userRole === "ROLE_ADMIN" && (
           <Col>
             <Card

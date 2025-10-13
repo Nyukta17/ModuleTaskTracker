@@ -1,12 +1,16 @@
 package com.example.SmartNewsHub.controller;
 
+import com.example.SmartNewsHub.details.CustomUserDetails;
+import com.example.SmartNewsHub.dto.NewsDTO;
 import com.example.SmartNewsHub.model.News;
 import com.example.SmartNewsHub.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/news")
@@ -20,9 +24,9 @@ public class NewsController {
     }
 
     // Получить список всех новостей
-    @GetMapping
-    public ResponseEntity<List<News>> getAllNews() {
-        List<News> newsList = newsService.getAllNews();
+    @GetMapping("/getAllNews")
+    public ResponseEntity<List<NewsDTO>> getAllNews(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        List<NewsDTO> newsList = newsService.getAllNews(customUserDetails.getCompanyId());
         return ResponseEntity.ok(newsList);
     }
 
@@ -37,25 +41,41 @@ public class NewsController {
     }
 
     // Создать новую новость
-    @PostMapping
-    public ResponseEntity<News> createNews(@RequestBody News news) {
-        News created = newsService.createNews(news);
-        return ResponseEntity.ok(created);
+    @PostMapping("/createNews")
+    public ResponseEntity<News> createNews(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody NewsDTO news) {
+        boolean isAdmin = customUserDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        boolean isManager = customUserDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_MANAGER"));
+
+        if (isAdmin || isManager) {
+            news.setCompanyId(customUserDetails.getCompanyId());
+            News created = newsService.createNews(news);
+            return ResponseEntity.ok(created);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
+
 
     // Обновить существующую новость
-    @PutMapping("/{id}")
-    public ResponseEntity<News> updateNews(@PathVariable Long id, @RequestBody News newsDetails) {
-        News updated = newsService.updateNews(id, newsDetails);
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(updated);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<NewsDTO> updateNews(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable Long id,
+            @RequestBody NewsDTO newsDetails) {
+
+        Optional<NewsDTO> updated = newsService.updateNews(id, newsDetails);
+
+        return updated
+                .map(dto -> ResponseEntity.ok(dto))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+
     // Удалить новость по ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNews(@PathVariable Long id) {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteNews(@AuthenticationPrincipal CustomUserDetails customUserDetails,@PathVariable Long id) {
         boolean deleted = newsService.deleteNews(id);
         if (!deleted) {
             return ResponseEntity.notFound().build();

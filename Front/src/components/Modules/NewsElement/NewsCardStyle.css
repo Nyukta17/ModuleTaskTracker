@@ -1,0 +1,72 @@
+.news-card {
+  width: 100%;
+  max-width: 1200px;
+  margin: 15px auto;
+  padding: 20px 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  white-space: normal;
+  position: relative;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.news-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+  border-color: #007bff;
+}
+
+.news-card h3 {
+  margin: 0 0 12px;
+  font-size: 1.75rem;
+  color: #222;
+}
+
+.news-card p {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+.news-card small {
+  display: block;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.expand-toggle {
+  color: #007bff;
+  font-weight: 600;
+  margin-top: 10px;
+  user-select: none;
+}
+
+.news-card button {
+  margin-right: 10px;
+}
+
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 1rem;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.buttons-row {
+  margin-top: 8px;
+}
+
+.error-message {
+  color: #d9534f;
+  margin-top: 8px;
+}

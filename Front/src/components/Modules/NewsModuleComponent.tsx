@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import NewsCard from "./NewsElement/NewsCard";
-import { Button } from "react-bootstrap";
+import { Button, Modal, Form, Alert } from "react-bootstrap";
+import ApiRoute from "../../api/ApiRoute";
+
+const api = new ApiRoute();
 
 const NewsModuleComponent: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
@@ -16,12 +19,11 @@ const NewsModuleComponent: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // Здесь запрос на получение новостей, заполните свой API
-    fetch("/api/news", {
+    fetch(api.getAllNewsCompany(), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        // "Authorization": "Bearer " + localStorage.getItem("jwtToken"), // если нужно
+        "Authorization": "Bearer " + localStorage.getItem("jwtToken"),
       },
     })
       .then((res) => {
@@ -40,15 +42,25 @@ const NewsModuleComponent: React.FC = () => {
   const handleAddNews = () => {
     setFormError(null);
 
-    // Тут соберите объект для отправки на сервер
-    const dto = { title, content };
+    if (!title.trim()) {
+      setFormError("Заголовок обязателен");
+      return;
+    }
+    if (!content.trim()) {
+      setFormError("Текст новости обязателен");
+      return;
+    }
 
-    // Запрос на добавление новости, заполните свой API
-    fetch("/api/news", {
+    const dto = {
+      title,
+      content,
+    };
+
+    fetch(api.createNewsCompany(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // "Authorization": "Bearer " + localStorage.getItem("jwtToken"),
+        "Authorization": "Bearer " + localStorage.getItem("jwtToken"),
       },
       body: JSON.stringify(dto),
     })
@@ -77,67 +89,67 @@ const NewsModuleComponent: React.FC = () => {
     );
   };
 
-  if (loading) return <p>Загрузка новостей...</p>;
-  if (error) return <p style={{ color: "red" }}>Ошибка: {error}</p>;
-  if (!data || data.length === 0) {
-    return (
-      <>
-        <h1>Новостей пока нет</h1>
-        <Button onClick={() => setShowForm(true)}>Добавить новость</Button>
-        {showForm && (
-          <div>
-            <input
-              placeholder="Заголовок"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <textarea
-              placeholder="Текст новости"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-            <Button onClick={handleAddNews}>Сохранить</Button>
-            <Button onClick={() => setShowForm(false)}>Отмена</Button>
-            {formError && <p style={{ color: "red" }}>{formError}</p>}
-          </div>
-        )}
-      </>
-    );
-  }
-
   return (
     <>
-      <Button onClick={() => setShowForm(true)}>Добавить новость</Button>
-      {showForm && (
-        <div>
-          <input
-            placeholder="Заголовок"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <textarea
-            placeholder="Текст новости"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-          <Button onClick={handleAddNews}>Сохранить</Button>
-          <Button onClick={() => setShowForm(false)}>Отмена</Button>
-          {formError && <p style={{ color: "red" }}>{formError}</p>}
-        </div>
-      )}
-      <div>
-        {data.map((news) => (
-          <NewsCard
-            key={news.id}
-            id={news.id}
-            title={news.title}
-            content={news.content}
-            createdAt={news.created_at}
-            onDeleted={handleDelete}
-            onUpdated={handleUpdate}
-          />
-        ))}
-      </div>
+      {loading && <p>Загрузка новостей...</p>}
+      {error && <p style={{ color: "red" }}>Ошибка: {error}</p>}
+
+      <Button onClick={() => setShowForm(true)} className="mb-3">
+        Добавить новость
+      </Button>
+
+      <Modal show={showForm} onHide={() => setShowForm(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Добавить новость</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {formError && <Alert variant="danger">{formError}</Alert>}
+          <Form>
+            <Form.Group controlId="newsTitle" className="mb-3">
+              <Form.Label>Заголовок</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Введите заголовок"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                autoFocus
+              />
+            </Form.Group>
+            <Form.Group controlId="newsContent" className="mb-3">
+              <Form.Label>Текст новости</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={5}
+                placeholder="Введите текст новости"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowForm(false)}>
+            Отмена
+          </Button>
+          <Button variant="primary" onClick={handleAddNews}>
+            Сохранить
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {!loading && !error && data.length === 0 && <h1>Новостей пока нет</h1>}
+
+      {data.map((news) => (
+        <NewsCard
+          key={news.id}
+          id={news.id}
+          title={news.title}
+          content={news.content ?? ""}
+          createdAt={news.createdAt || news.created_at}
+          onDeleted={handleDelete}
+          onUpdated={handleUpdate}
+        />
+      ))}
     </>
   );
 };

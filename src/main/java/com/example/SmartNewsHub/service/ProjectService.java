@@ -54,6 +54,7 @@ public class ProjectService {
         Project savedProject = projectRepository.save(project);
 
         // Находим модули из базы
+
         List<Module> modules = moduleRepository.findByNameIn(dto.getModules());
 
         // Создаем связки ProjectModule
