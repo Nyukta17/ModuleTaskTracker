@@ -9,7 +9,7 @@ type Task = {
   title: string;
   description: string;
   assignedEmployee: string;
-  status: "NEW" | "IN_PROGRESS" | "TESTING" | "DONE";
+  status: "NEW" | "IN_PROGRESS" | "ON_HOLD" | "DONE";
   priority?: "LOW" | "MEDIUM" | "HIGH";
   dueDate?: string; // ISO 8601 DATETIME string
 };
@@ -36,7 +36,6 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
     const errs: { [key: string]: string } = {};
     if (!task.title.trim()) errs.title = "Название обязательно";
     if (!task.assignedEmployee.trim()) errs.assignedEmployee = "Исполнитель обязателен";
-    // по желанию добавьте валидацию priority и dueDate
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -44,16 +43,17 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    let value: string | undefined = e.target.value;
+    let { name, value } = e.target;
 
-    if (e.target.name === "dueDate" && value) {
-      // преобразуем дату из YYYY-MM-DD в ISO 8601 с временем
-      const date = new Date(value);
-      value = date.toISOString(); // "2025-09-19T00:00:00.000Z"
+    if (name === "dueDate" && value) {
+      
+      if (!value.includes("T")) {
+        value = value + "T00:00:00";
+      }
     }
 
-    setTask({ ...task, [e.target.name]: value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    setTask({ ...task, [name]: value });
+    setErrors({ ...errors, [name]: "" });
     setSubmitSuccess(false);
   };
 
@@ -62,21 +62,24 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
     if (!validate()) return;
     setSubmitting(true);
     setSubmitSuccess(false);
-
+    console.log(task);
     try {
-      await fetch("", {
+      const response = await fetch(api.createTask(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("jwtToken"),
+          Authorization: "Bearer " + localStorage.getItem("jwtToken"),
         },
         body: JSON.stringify(task),
       });
-
+      if (!response.ok) {
+        throw new Error(`Ошибка сохранения задачи: ${response.statusText}`);
+      }
       setSubmitSuccess(true);
       if (onSave) onSave();
     } catch (error) {
       console.error("Ошибка при сохранении задачи:", error);
+      setErrors({ ...errors, form: "Ошибка при сохранении задачи" });
     } finally {
       setSubmitting(false);
     }
@@ -85,6 +88,7 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
   return (
     <Form onSubmit={handleSubmit} noValidate>
       {submitSuccess && <Alert variant="success">Задача успешно сохранена!</Alert>}
+      {errors.form && <Alert variant="danger">{errors.form}</Alert>}
 
       <Form.Group controlId="formTitle" className="mb-3">
         <Form.Label>Название</Form.Label>

@@ -31,7 +31,7 @@ class ApiRoute {
     return `${this.BASE_URL}/news/getAllNews`
   }
   createNewsCompany(){
-    return `${this.BASE_URL}/news/createNews`
+    return `${this.BASE_URL}/news/create`
   }
   updateNews(id:number){
     return`${this.BASE_URL}/news/update/${id}`
@@ -41,7 +41,7 @@ class ApiRoute {
   }
   //Calendar
   getAllEvents() {
-    return `${this.BASE_URL}/calendar/getAllEvent`;
+    return `${this.BASE_URL}/calendar/getAllEvents`;
   }
 
   createEvent() {
@@ -54,6 +54,27 @@ class ApiRoute {
 
   deleteEvent(id: number) {
     return `${this.BASE_URL}/calendar/delete/${id}`;
+  }
+
+  // Задание - задачи
+  getAllTasks() {
+    return `${this.BASE_URL}/task/all`;
+  }
+
+  getTaskById(id: number) {
+    return `${this.BASE_URL}/task/${id}`;
+  }
+
+  createTask() {
+    return `${this.BASE_URL}/task/create`;
+  }
+
+  updateTask(id: number) {
+    return `${this.BASE_URL}/task/update/${id}`;
+  }
+
+  deleteTask(id: number) {
+    return `${this.BASE_URL}/task/delete/${id}`;
   }
 }
 

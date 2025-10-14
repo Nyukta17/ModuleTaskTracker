@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventContentArg, DateSelectArg } from "@fullcalendar/core";
+import type { EventContentArg, EventClickArg, DateSelectArg } from "@fullcalendar/core";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import ApiRoute from "../../api/ApiRoute";
 
@@ -18,25 +18,23 @@ interface BackendEvent {
   endTime?: string;
 }
 
-type UserRole = "Boss" | "administrator" | "employee";
-
 const CalendarModuleComponent: React.FC = () => {
   const [events, setEvents] = useState<BackendEvent[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStartDate, setSelectedStartDate] = useState("");
   const [selectedEndDate, setSelectedEndDate] = useState("");
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [type, setType] = useState("EVENT");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   const token = localStorage.getItem("jwtToken") ?? "";
 
   useEffect(() => {
-    const roleFromToken = localStorage.getItem("userRole") as UserRole | null;
-    setUserRole(roleFromToken);
+    fetchEvents();
   }, []);
 
   const fetchEvents = async () => {
@@ -65,10 +63,6 @@ const CalendarModuleComponent: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const createEvent = async (newEvent: {
     startDateTime: string;
     endDateTime: string;
@@ -78,6 +72,16 @@ const CalendarModuleComponent: React.FC = () => {
     endTime?: string;
   }) => {
     try {
+      const formatDateTime = (dateTimeStr: string, timeStr?: string) => {
+        if (!dateTimeStr) return "";
+        if (dateTimeStr.includes("T")) return dateTimeStr;
+        const timePart = timeStr ? timeStr : "00:00:00";
+        return `${dateTimeStr}T${timePart}`;
+      };
+
+      const start = formatDateTime(newEvent.startDateTime, newEvent.startTime);
+      const end = formatDateTime(newEvent.endDateTime, newEvent.endTime);
+
       const res = await fetch(api.createEvent(), {
         method: "POST",
         headers: {
@@ -86,8 +90,8 @@ const CalendarModuleComponent: React.FC = () => {
         },
         body: JSON.stringify({
           title: newEvent.text,
-          startDateTime: newEvent.startDateTime,
-          endDateTime: newEvent.endDateTime,
+          startDateTime: start,
+          endDateTime: end,
           type: newEvent.type,
           startTime: newEvent.startTime,
           endTime: newEvent.endTime,
@@ -96,16 +100,20 @@ const CalendarModuleComponent: React.FC = () => {
       if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       await fetchEvents();
       setShowModal(false);
-      setTitle("");
-      setType("EVENT");
-      setStartTime("09:00");
-      setEndTime("17:00");
-      setSelectedStartDate("");
-      setSelectedEndDate("");
-      setError(null);
+      resetForm();
     } catch (e: any) {
       setError(e.message);
     }
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setType("EVENT");
+    setStartTime("09:00");
+    setEndTime("17:00");
+    setSelectedStartDate("");
+    setSelectedEndDate("");
+    setError(null);
   };
 
   const isToday = (dateStr: string) => {
@@ -114,14 +122,10 @@ const CalendarModuleComponent: React.FC = () => {
   };
 
   const handleSelect = (selectInfo: DateSelectArg) => {
-    if (userRole === "Boss" || userRole === "administrator") {
-      setSelectedStartDate(selectInfo.startStr);
-      setSelectedEndDate(selectInfo.endStr);
-      setShowModal(true);
-      setError(null);
-    } else {
-      setError("У вас нет прав для создания события");
-    }
+    setSelectedStartDate(selectInfo.startStr);
+    setSelectedEndDate(selectInfo.endStr);
+    setShowModal(true);
+    setError(null);
   };
 
   const handleSubmit = () => {
@@ -147,6 +151,29 @@ const CalendarModuleComponent: React.FC = () => {
       startTime: type === "COMMON_TASK" ? startTime : undefined,
       endTime: type === "COMMON_TASK" ? endTime : undefined,
     });
+  };
+
+  const handleEventClick = (clickInfo: EventClickArg) => {
+    setSelectedEventId(clickInfo.event.id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    try {
+      if (!selectedEventId) return;
+      const res = await fetch(api.deleteEvent(Number(selectedEventId)), {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
+      setShowDeleteModal(false);
+      setSelectedEventId(null);
+      await fetchEvents();
+    } catch (e: any) {
+      setError(e.message);
+    }
   };
 
   const renderEventContent = (eventInfo: EventContentArg) => (
@@ -188,7 +215,9 @@ const CalendarModuleComponent: React.FC = () => {
           center: "title",
           right: "dayGridMonth",
         }}
+        eventClick={handleEventClick}
       />
+      {/* Модальное окно создания события */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Создать событие</Modal.Title>
@@ -248,6 +277,24 @@ const CalendarModuleComponent: React.FC = () => {
           </Button>
           <Button variant="primary" onClick={handleSubmit}>
             Создать
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Модальное окно подтверждения удаления */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Удалить событие</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Вы уверены, что хотите удалить это событие?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Отмена
+          </Button>
+          <Button variant="danger" onClick={handleDeleteEvent}>
+            Удалить
           </Button>
         </Modal.Footer>
       </Modal>
