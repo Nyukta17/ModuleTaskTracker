@@ -5,7 +5,11 @@ import ApiRoute from "../../api/ApiRoute";
 
 const api = new ApiRoute();
 
-const NewsModuleComponent: React.FC = () => {
+interface NewsModuleComponentProps {
+  projectHubId: string;
+}
+
+const NewsModuleComponent: React.FC<NewsModuleComponentProps> = ({ projectHubId }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +23,7 @@ const NewsModuleComponent: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    fetch(api.getAllNewsCompany(), {
+    fetch(api.getAllNewsCompany() + `?hubId=${projectHubId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -36,8 +40,10 @@ const NewsModuleComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchNews();
-  }, []);
+    if (projectHubId) {
+      fetchNews();
+    }
+  }, [projectHubId]);
 
   const handleAddNews = () => {
     setFormError(null);
@@ -54,6 +60,7 @@ const NewsModuleComponent: React.FC = () => {
     const dto = {
       title,
       content,
+      hubId: projectHubId,
     };
 
     fetch(api.createNewsCompany(), {

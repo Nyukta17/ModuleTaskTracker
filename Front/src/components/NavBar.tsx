@@ -19,6 +19,7 @@ const NavBar = () => {
             .join('')
         );
         const payload = JSON.parse(jsonPayload);
+        
         setUserRole(payload.role);
       } catch {
         setUserRole(null);
@@ -41,7 +42,7 @@ const NavBar = () => {
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
-        <Navbar.Brand href="/">SmartNewsHub</Navbar.Brand>
+        <Navbar.Brand href="/"></Navbar.Brand>
         <Nav className="me-auto">
           <Button variant="outline-light" onClick={goToAdmin} className="me-2" hidden={userRole !== 'ROLE_ADMIN'}>
             Админ-панель

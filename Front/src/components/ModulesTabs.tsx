@@ -26,7 +26,7 @@ interface ModulesTabsProps {
 
 const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
-
+  
   useEffect(() => {
     if (modules.length > 0 && modules[0].id !== undefined && modules[0].id !== null) {
       setActiveKey(modules[0].id.toString());
@@ -48,29 +48,21 @@ const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
       mountOnEnter
       unmountOnExit
     >
-      {modules.map((mod, index) => {
-        const key = mod.id !== undefined && mod.id !== null ? mod.id.toString() : `key-${index}`;
-        const eventKey = key;
-        const ModuleComponent = moduleComponents[mod.name.toUpperCase()];
+     {modules.map((mod, index) => {
+  const key = mod.id?.toString() ?? `key-${index}`;
+  const ModuleComponent = moduleComponents[mod.name.toUpperCase()];
 
-        return (
-          <Tab eventKey={eventKey} title={mod.name} key={key}>
-            <div style={{ padding: 10 }}>
-              <Suspense fallback={<div>Загрузка модуля...</div>}>
-                {ModuleComponent ? (
-                  mod.name.toUpperCase() === "BASE_MODULE" ? (
-                    <ModuleComponent projectHubId={projectHubId} />
-                  ) : (
-                    <ModuleComponent />
-                  )
-                ) : (
-                  <div>Компонент для модуля "{mod.name}" не найден</div>
-                )}
-              </Suspense>
-            </div>
-          </Tab>
-        );
-      })}
+  return (
+    <Tab eventKey={key} title={mod.name} key={key}>
+      <div style={{ padding: 10 }}>
+        <Suspense fallback={<div>Загрузка модуля...</div>}>
+          {ModuleComponent ? <ModuleComponent projectHubId={projectHubId} /> : <div>Компонент для модуля "{mod.name}" не найден</div>}
+        </Suspense>
+      </div>
+    </Tab>
+  );
+})}
+
     </Tabs>
   );
 };

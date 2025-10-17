@@ -25,7 +25,7 @@ public class NewsService {
         this.companyRepository = companyRepository;
     }
 
-    public List<NewsDTO> getAllNews(Long companyId) {
+    public List<NewsDTO> getAllNews(Long companyId,Long id) {
         List<News> news = newsRepository.findAllByCompanyId(companyId);
         List<NewsDTO> dtoList = new ArrayList<>();
         for (News n : news) {

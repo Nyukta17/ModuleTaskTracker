@@ -49,7 +49,7 @@ const Hub: React.FC = () => {
       <h1>{projectName}</h1>
       {loading && <p>Загрузка модулей...</p>}
       {error && <p>Ошибка: {error}</p>}
-      {!loading && !error && <ModulesTabs modules={modules} />}
+      {!loading && !error && <ModulesTabs modules={modules} projectHubId={String(hubId)} />}
     </div>
   );
 };

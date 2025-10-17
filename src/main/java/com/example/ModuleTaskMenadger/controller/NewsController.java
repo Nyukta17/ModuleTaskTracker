@@ -24,8 +24,8 @@ public class NewsController {
 
     // Получить список всех новостей
     @GetMapping("/getAllNews")
-    public ResponseEntity<List<NewsDTO>> getAllNews(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        List<NewsDTO> newsList = newsService.getAllNews(customUserDetails.getCompanyId());
+    public ResponseEntity<List<NewsDTO>> getAllNews(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestParam("hubId") Long id) {
+        List<NewsDTO> newsList = newsService.getAllNews(customUserDetails.getCompanyId(),id);
         return ResponseEntity.ok(newsList);
     }
 
