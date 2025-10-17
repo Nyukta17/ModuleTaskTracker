@@ -4,6 +4,7 @@ import com.example.ModuleTaskMenadger.dto.NewsDTO;
 import com.example.ModuleTaskMenadger.model.News;
 import com.example.ModuleTaskMenadger.repository.CompanyRepository;
 import com.example.ModuleTaskMenadger.repository.NewsRepository;
+import com.example.ModuleTaskMenadger.repository.ProjectRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,17 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
     private final CompanyRepository companyRepository;
+    private final ProjectRepository projectRepository;
 
     @Autowired
-    public NewsService(CompanyRepository companyRepository,NewsRepository newsRepository) {
+    public NewsService(CompanyRepository companyRepository,NewsRepository newsRepository,ProjectRepository projectRepository) {
         this.newsRepository = newsRepository;
         this.companyRepository = companyRepository;
+        this.projectRepository = projectRepository;
     }
 
     public List<NewsDTO> getAllNews(Long companyId,Long id) {
-        List<News> news = newsRepository.findAllByCompanyId(companyId);
+        List<News> news = newsRepository.findAllByCompanyIdAndProjectId(companyId,id);
         List<NewsDTO> dtoList = new ArrayList<>();
         for (News n : news) {
             NewsDTO dto = new NewsDTO();
@@ -54,7 +57,7 @@ public class NewsService {
         news.setCreatedAt(LocalDateTime.now());
         news.setCompany(companyRepository.findById(dto.getCompanyId())
                 .orElseThrow(() -> new IllegalArgumentException("Company not found")));
-
+        news.setProject(projectRepository.findById(dto.getHubId()).orElseThrow(()->new RuntimeException("Проект не найден")));
         News saved = newsRepository.save(news);
 
         return convertToDto(saved);

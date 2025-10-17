@@ -8,6 +8,7 @@ public class NewsDTO {
     private String title;
     private String content;
     private LocalDateTime createdAt;
+    private Long hubId;
 
     public NewsDTO() {
     }
@@ -28,6 +29,14 @@ public class NewsDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getHubId() {
+        return hubId;
+    }
+
+    public void setHubId(Long hubId) {
+        this.hubId = hubId;
     }
 
     public Long getCompanyId() {

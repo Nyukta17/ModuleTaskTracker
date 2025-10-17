@@ -43,7 +43,6 @@ public class NewsController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
         boolean isManager = customUserDetails.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_MANAGER"));
-
         if (isAdmin || isManager) {
             news.setCompanyId(customUserDetails.getCompanyId());
             NewsDTO created = newsService.createNews(news);

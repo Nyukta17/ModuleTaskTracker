@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findAllByCompanyId(Long companyId);
+    List<News> findAllByCompanyIdAndProjectId(Long companyId, Long projectId);
 }
