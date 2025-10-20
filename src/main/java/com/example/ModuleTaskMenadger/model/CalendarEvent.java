@@ -30,7 +30,11 @@ public class CalendarEvent {
 
     @OneToOne
     @JoinColumn(name = "task_id", unique = true)
-    private Task task;  // связь с задачей
+    private Task task;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="project_id")
+    private Project project;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -41,6 +45,14 @@ public class CalendarEvent {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
     }
 
     public Company getCompany() {
