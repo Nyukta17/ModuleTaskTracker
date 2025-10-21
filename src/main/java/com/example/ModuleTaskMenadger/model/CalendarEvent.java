@@ -30,7 +30,8 @@ public class CalendarEvent {
 
     @OneToOne
     @JoinColumn(name = "task_id", unique = true)
-    private Task task;  // связь с задачей
+    private Task task;
+
 
     @CreationTimestamp
     private LocalDateTime createdAt;

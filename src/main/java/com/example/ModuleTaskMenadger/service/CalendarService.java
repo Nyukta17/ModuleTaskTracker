@@ -3,9 +3,11 @@ package com.example.ModuleTaskMenadger.service;
 import com.example.ModuleTaskMenadger.dto.CalendarEventDTO;
 import com.example.ModuleTaskMenadger.model.CalendarEvent;
 import com.example.ModuleTaskMenadger.model.Company;
+import com.example.ModuleTaskMenadger.model.Project;
 import com.example.ModuleTaskMenadger.model.Task;
 import com.example.ModuleTaskMenadger.repository.CalendarEventRepository;
 import com.example.ModuleTaskMenadger.repository.CompanyRepository;
+import com.example.ModuleTaskMenadger.repository.ProjectRepository;
 import com.example.ModuleTaskMenadger.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,8 +28,11 @@ public class CalendarService {
     @Autowired
     private TaskRepository taskRepository;
 
-    public List<CalendarEventDTO> getAllEvents() {
-        return calendarEventRepository.findAll()
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    public List<CalendarEventDTO> getAllEvents(Long id) {
+        return calendarEventRepository.findByProjectId(id)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -38,7 +43,7 @@ public class CalendarService {
                 .map(this::convertToDto);
     }
 
-    public CalendarEventDTO createEvent(CalendarEventDTO dto) {
+    public CalendarEventDTO createEvent(CalendarEventDTO dto,Long id) {
         CalendarEvent event = convertToEntity(dto);
         CalendarEvent saved = calendarEventRepository.save(event);
         return convertToDto(saved);
@@ -98,6 +103,7 @@ public class CalendarService {
         event.setDescription(dto.getDescription());
         event.setStartDateTime(dto.getStartDateTime());
         event.setEndDateTime(dto.getEndDateTime());
+        event.setProject(projectRepository.findById(dto.getHubId()).orElseThrow(()->new RuntimeException("Проект не найдет")));
 
         if (dto.getCompanyId() != null) {
             Company company = companyRepository.findById(dto.getCompanyId()).orElse(null);

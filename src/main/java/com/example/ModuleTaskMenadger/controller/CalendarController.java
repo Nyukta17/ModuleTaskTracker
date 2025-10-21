@@ -20,8 +20,8 @@ public class CalendarController {
 
     // Получить все события календаря
     @GetMapping("/getAllEvents")
-    public ResponseEntity<List<CalendarEventDTO>> getAllEvents() {
-        List<CalendarEventDTO> events = calendarService.getAllEvents();
+    public ResponseEntity<List<CalendarEventDTO>> getAllEvents(@RequestParam("hubId") Long id) {
+        List<CalendarEventDTO> events = calendarService.getAllEvents(id);
         return ResponseEntity.ok(events);
     }
 
@@ -36,8 +36,10 @@ public class CalendarController {
     // Создать новое событие
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/createEvent")
-    public ResponseEntity<CalendarEventDTO> createEvent(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody CalendarEventDTO eventDTO,@RequestParam("hubId") Long hubId) {
-        CalendarEventDTO created = calendarService.createEvent(eventDTO);
+    public ResponseEntity<CalendarEventDTO> createEvent(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody CalendarEventDTO eventDTO,@RequestParam("hubId") Long id) {
+        eventDTO.setHubId(id);
+        eventDTO.setCompanyId(customUserDetails.getCompanyId());
+        CalendarEventDTO created = calendarService.createEvent(eventDTO,id);
         return ResponseEntity.ok(created);
     }
 

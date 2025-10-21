@@ -9,11 +9,19 @@ public class CalendarEventDTO {
     private String description;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
+    private Long hubId;
     private Long taskId;           // для связи с задачей только ID
     private LocalDateTime createdAt;
 
     public CalendarEventDTO() {}
 
+    public Long getHubId() {
+        return hubId;
+    }
+
+    public void setHubId(Long hubId) {
+        this.hubId = hubId;
+    }
     // Геттеры и сеттеры для всех полей
 
     public Long getId() { return id; }

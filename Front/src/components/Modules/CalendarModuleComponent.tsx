@@ -17,8 +17,11 @@ interface BackendEvent {
   startTime?: string;
   endTime?: string;
 }
+interface CalendarProps {
+  projectHubId: number; // или другой тип
+}
 
-const CalendarModuleComponent: React.FC = () => {
+const CalendarModuleComponent: React.FC<CalendarProps> = ({projectHubId}) => {
   const [events, setEvents] = useState<BackendEvent[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -32,14 +35,14 @@ const CalendarModuleComponent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const token = localStorage.getItem("jwtToken") ?? "";
-
+  console.log(projectHubId)
   useEffect(() => {
     fetchEvents();
   }, []);
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch(api.getAllEvents(), {
+      const res = await fetch(api.getAllEvents()+`?hubId=${projectHubId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -70,6 +73,7 @@ const CalendarModuleComponent: React.FC = () => {
     type: string;
     startTime?: string;
     endTime?: string;
+    projectHubId:number;
   }) => {
     try {
       const formatDateTime = (dateTimeStr: string, timeStr?: string) => {
@@ -82,7 +86,7 @@ const CalendarModuleComponent: React.FC = () => {
       const start = formatDateTime(newEvent.startDateTime, newEvent.startTime);
       const end = formatDateTime(newEvent.endDateTime, newEvent.endTime);
 
-      const res = await fetch(api.createEvent(), {
+      const res = await fetch(`${api.createEvent()}?hubId=${projectHubId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,6 +154,7 @@ const CalendarModuleComponent: React.FC = () => {
       type,
       startTime: type === "COMMON_TASK" ? startTime : undefined,
       endTime: type === "COMMON_TASK" ? endTime : undefined,
+      projectHubId:projectHubId
     });
   };
 
