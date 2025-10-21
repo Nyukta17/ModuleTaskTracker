@@ -36,7 +36,7 @@ public class CalendarController {
     // Создать новое событие
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/createEvent")
-    public ResponseEntity<CalendarEventDTO> createEvent(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody CalendarEventDTO eventDTO) {
+    public ResponseEntity<CalendarEventDTO> createEvent(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody CalendarEventDTO eventDTO,@RequestParam("hubId") Long hubId) {
         CalendarEventDTO created = calendarService.createEvent(eventDTO);
         return ResponseEntity.ok(created);
     }
