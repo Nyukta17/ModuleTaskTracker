@@ -38,7 +38,11 @@ public class Task {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TaskStatus status = TaskStatus.NEW; // начальное значение
+    private TaskStatus status = TaskStatus.NEW;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     @Override
     public String toString() {
@@ -53,6 +57,22 @@ public class Task {
                 ", createdAt=" + createdAt +
                 ", status=" + status +
                 '}';
+    }
+
+    public Users getAssignedUsers() {
+        return assignedUsers;
+    }
+
+    public void setAssignedUsers(Users assignedUsers) {
+        this.assignedUsers = assignedUsers;
+    }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
     }
 
     // геттер и сеттер

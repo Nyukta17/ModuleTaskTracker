@@ -2,12 +2,17 @@ package com.example.ModuleTaskMenadger.service;
 
 import com.example.ModuleTaskMenadger.dto.TaskDTO;
 import com.example.ModuleTaskMenadger.model.Task;
+import com.example.ModuleTaskMenadger.repository.CompanyRepository;
+import com.example.ModuleTaskMenadger.repository.ProjectRepository;
 import com.example.ModuleTaskMenadger.repository.TaskRepository;
+import com.example.ModuleTaskMenadger.repository.UsersRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Service
@@ -15,12 +20,26 @@ public class TaskService {
 
     @Autowired
     private TaskRepository taskRepository;
-
+    @Autowired
+    private ProjectRepository projectRepository;
+    @Autowired
+    private CompanyRepository companyRepository;
+    @Autowired
+    private UsersRepository usersRepository;
     // Получить все задачи
-    public List<TaskDTO> getAllTasks() {
-        List<Task> tasks = taskRepository.findAll();
-        System.out.println(tasks);
-        return tasks.stream().map(this::convertToDto).collect(Collectors.toList());
+    public List<TaskDTO> getAllTasks(Long projectId,Long companyId) {
+        try {
+            List<Task> tasks = taskRepository.findByProjectIdAndCompanyId(projectId, companyId);
+            return tasks.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+
+            System.err.println("Ошибка при получении задач: " + e.getMessage());
+
+            throw new RuntimeException("Ошибка при получении задач", e);
+
+        }
     }
 
     // Получить задачу по ID
@@ -29,6 +48,7 @@ public class TaskService {
     }
 
     // Создать задачу
+    @Transactional
     public TaskDTO createTask(TaskDTO dto) {
         Task task = convertToEntity(dto);
         Task saved = taskRepository.save(task);
@@ -73,11 +93,15 @@ public class TaskService {
     // Преобразование DTO в Entity
     private Task convertToEntity(TaskDTO dto) {
         Task task = new Task();
-        // При создании id не устанавливаем
+
         task.setTitle(dto.getTitle());
         task.setDescription(dto.getDescription());
         task.setDueDate(dto.getDueDate());
         task.setCompleted(dto.isCompleted());
+        task.setProject(projectRepository.findById(dto.getHub_Id()).orElseThrow(()-> new RuntimeException("project not found")));
+        task.setCompany(companyRepository.findById(dto.getCompanyId()).orElseThrow(()-> new RuntimeException("company not found")));
+        task.setAssignedUser(usersRepository.findByUsername(dto.getAssignedUser()).orElseThrow(()->new RuntimeException("user not found")));
+        task.setStatus(dto.getStatus());
         // Другие поля
         return task;
     }

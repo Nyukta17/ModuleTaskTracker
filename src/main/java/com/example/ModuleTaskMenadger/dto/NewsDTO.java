@@ -70,4 +70,16 @@ public class NewsDTO {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "NewsDTO{" +
+                "id=" + id +
+                ", companyId=" + companyId +
+                ", title='" + title + '\'' +
+                ", content='" + content + '\'' +
+                ", createdAt=" + createdAt +
+                ", hubId=" + hubId +
+                '}';
+    }
 }

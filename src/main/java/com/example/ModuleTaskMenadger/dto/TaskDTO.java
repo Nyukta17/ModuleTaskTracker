@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 public class TaskDTO {
     private Long id;
     private Long companyId;
-    private Long assignedUserId;
+    private Long hub_Id;
+    private String assignedUser;
     private String title;
     private String description;
     private LocalDateTime dueDate;
@@ -22,7 +23,7 @@ public class TaskDTO {
         return "TaskDTO{" +
                 "id=" + id +
                 ", companyId=" + companyId +
-                ", assignedUserId=" + assignedUserId +
+                ", assignedUser=" + assignedUser +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", dueDate=" + dueDate +
@@ -31,7 +32,15 @@ public class TaskDTO {
                 ", status=" + status +
                 '}';
     }
-// Геттеры и сеттеры всех полей
+
+    public Long getHub_Id() {
+        return hub_Id;
+    }
+
+    public void setHub_Id(Long hub_Id) {
+        this.hub_Id = hub_Id;
+    }
+    // Геттеры и сеттеры всех полей
 
     public Long getId() {
         return id;
@@ -49,12 +58,12 @@ public class TaskDTO {
         this.companyId = companyId;
     }
 
-    public Long getAssignedUserId() {
-        return assignedUserId;
+    public String getAssignedUser() {
+        return assignedUser;
     }
 
-    public void setAssignedUserId(Long assignedUserId) {
-        this.assignedUserId = assignedUserId;
+    public void setAssignedUser(String assignedUserId) {
+        this.assignedUser = assignedUserId;
     }
 
     public String getTitle() {

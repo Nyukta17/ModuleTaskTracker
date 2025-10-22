@@ -60,10 +60,10 @@ const NewsModuleComponent: React.FC<NewsModuleComponentProps> = ({ projectHubId 
     const dto = {
       title,
       content,
-      hubId: projectHubId,
+      
     };
 
-    fetch(api.createNewsCompany(), {
+    fetch(api.createNewsCompany()+`?hubId=${projectHubId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

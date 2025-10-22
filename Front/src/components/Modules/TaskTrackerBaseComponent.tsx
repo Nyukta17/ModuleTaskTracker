@@ -35,7 +35,7 @@ const TaskTrackerBaseComponent: React.FC<TaskTrackerBaseComponentProps> = ({ pro
             <Button variant="primary" className="mb-3" onClick={openTasks}>
               Создать задачу
             </Button>
-            <Kamban/>
+            <Kamban projectHubId={projectHubId}/>
           </div>
         </Tab>
 
@@ -45,7 +45,7 @@ const TaskTrackerBaseComponent: React.FC<TaskTrackerBaseComponentProps> = ({ pro
               <Button variant="secondary" className="mb-3" onClick={closeTasks}>
                 Вернуться к Kamban
               </Button>
-              <Tasks />
+              <Tasks projectHubId={projectHubId} />
             </div>
           </Tab>
         )}

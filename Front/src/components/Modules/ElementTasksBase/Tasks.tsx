@@ -8,21 +8,22 @@ type Task = {
   id?: number;
   title: string;
   description: string;
-  assignedEmployee: string;
-  status: "NEW" | "IN_PROGRESS" | "ON_HOLD" | "DONE";
+  assignedUser: string;
+  status: "NEW" | "IN_PROGRESS" | "TESTING" | "DONE";
   priority?: "LOW" | "MEDIUM" | "HIGH";
   dueDate?: string; // ISO 8601 DATETIME string
 };
 
-const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
+const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void;projectHubId:string }> = ({
   initialTask,
   onSave,
+  projectHubId
 }) => {
   const [task, setTask] = useState<Task>(
     initialTask || {
       title: "",
       description: "",
-      assignedEmployee: "",
+      assignedUser: "",
       status: "NEW",
       priority: "MEDIUM",
       dueDate: "",
@@ -31,11 +32,11 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-
+  
   const validate = (): boolean => {
     const errs: { [key: string]: string } = {};
     if (!task.title.trim()) errs.title = "Название обязательно";
-    if (!task.assignedEmployee.trim()) errs.assignedEmployee = "Исполнитель обязателен";
+    if (!task.assignedUser.trim()) errs.assignedEmployee = "Исполнитель обязателен";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -64,7 +65,7 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
     setSubmitSuccess(false);
     console.log(task);
     try {
-      const response = await fetch(api.createTask(), {
+      const response = await fetch(api.createTask()+`?hubId=${projectHubId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,11 +121,11 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void }> = ({
       <Form.Group controlId="formAssignedEmployee" className="mb-3">
         <Form.Label>Исполнитель</Form.Label>
         <Form.Control
-          name="assignedEmployee"
+          name="assignedUser"
           type="text"
-          value={task.assignedEmployee}
+          value={task.assignedUser}
           onChange={handleChange}
-          isInvalid={!!errors.assignedEmployee}
+          isInvalid={!!errors.assignedUser}
           disabled={submitting}
           placeholder="Имя исполнителя"
         />

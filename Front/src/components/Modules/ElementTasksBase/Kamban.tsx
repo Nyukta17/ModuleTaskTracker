@@ -17,7 +17,11 @@ type Task = {
 
 const statuses: Task["status"][] = ["NEW", "IN_PROGRESS", "TESTING", "APPROVED"];
 
-const KanbanBoard: React.FC = () => {
+interface MyComponentProps {
+  projectHubId: string; 
+}
+
+const KanbanBoard: React.FC<MyComponentProps> = ({projectHubId}) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +36,7 @@ const KanbanBoard: React.FC = () => {
       return;
     }
     try {
-      const response = await fetch(api.getAllTasks(), {
+      const response = await fetch(api.getAllTasks()+`?hubId=${projectHubId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

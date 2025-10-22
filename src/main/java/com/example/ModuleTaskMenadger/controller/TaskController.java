@@ -1,9 +1,13 @@
 package com.example.ModuleTaskMenadger.controller;
 
+import com.example.ModuleTaskMenadger.details.CustomUserDetails;
 import com.example.ModuleTaskMenadger.dto.TaskDTO;
+import com.example.ModuleTaskMenadger.service.CustomUserDetailsService;
 import com.example.ModuleTaskMenadger.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.CustomAutowireConfigurer;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +21,8 @@ public class TaskController {
 
     // Получить все задачи
     @GetMapping("/all")
-    public ResponseEntity<List<TaskDTO>> getAllTasks() {
-        List<TaskDTO> tasks = taskService.getAllTasks();
+    public ResponseEntity<List<TaskDTO>> getAllTasks(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestParam("hubId")Long hubId) {
+        List<TaskDTO> tasks = taskService.getAllTasks(hubId,customUserDetails.getCompanyId());
         return ResponseEntity.ok(tasks);
     }
 
@@ -32,7 +36,9 @@ public class TaskController {
 
     // Создать новую задачу
     @PostMapping("/create")
-    public ResponseEntity<TaskDTO> createTask(@RequestBody TaskDTO taskDTO) {
+    public ResponseEntity<TaskDTO> createTask(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody TaskDTO taskDTO, @RequestParam("hubId")Long id) {
+        taskDTO.setHub_Id(id);
+        taskDTO.setCompanyId(customUserDetails.getCompanyId());
         TaskDTO createdTask = taskService.createTask(taskDTO);
         return ResponseEntity.ok(createdTask);
     }

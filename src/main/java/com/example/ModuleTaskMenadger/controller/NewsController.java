@@ -38,13 +38,14 @@ public class NewsController {
 
     // Создать новую новость
     @PostMapping("/create")
-    public ResponseEntity<NewsDTO> createNews(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody NewsDTO news) {
+    public ResponseEntity<NewsDTO> createNews(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody NewsDTO news,@RequestParam("hubId")Long id) {
         boolean isAdmin = customUserDetails.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
         boolean isManager = customUserDetails.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_MANAGER"));
         if (isAdmin || isManager) {
             news.setCompanyId(customUserDetails.getCompanyId());
+            news.setHubId(id);
             NewsDTO created = newsService.createNews(news);
             return ResponseEntity.ok(created);
         } else {
