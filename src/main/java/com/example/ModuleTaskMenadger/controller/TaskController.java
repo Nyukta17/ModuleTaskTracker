@@ -22,7 +22,9 @@ public class TaskController {
     // Получить все задачи
     @GetMapping("/all")
     public ResponseEntity<List<TaskDTO>> getAllTasks(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestParam("hubId")Long hubId) {
+
         List<TaskDTO> tasks = taskService.getAllTasks(hubId,customUserDetails.getCompanyId());
+        System.out.println(tasks);
         return ResponseEntity.ok(tasks);
     }
 
@@ -39,6 +41,7 @@ public class TaskController {
     public ResponseEntity<TaskDTO> createTask(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody TaskDTO taskDTO, @RequestParam("hubId")Long id) {
         taskDTO.setHub_Id(id);
         taskDTO.setCompanyId(customUserDetails.getCompanyId());
+        System.out.println(taskDTO);
         TaskDTO createdTask = taskService.createTask(taskDTO);
         return ResponseEntity.ok(createdTask);
     }

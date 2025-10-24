@@ -4,6 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import ApiRoute from "../../api/ApiRoute";
+import { fetchCompanyUsers } from "../Funcions/GetUsers";
 
 const api = new ApiRoute();
 
@@ -29,7 +30,7 @@ interface Task {
 
 interface CalendarProps {
   projectHubId: string;
-  timeTrackerAvailable: boolean;
+  isBaseModuleAvailable: boolean;
   newsAvailable: boolean;
 }
 
@@ -68,15 +69,31 @@ const TaskForm: React.FC<{
   onChange: (task: Task) => void;
   errors: { [key: string]: string };
 }> = ({ task, onChange, errors }) => {
+  const [users, setUsers] = useState<{ id: string; username: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (users.length === 0 && !loading) {
+      setLoading(true);
+      fetchCompanyUsers().then(fetchedUsers => {
+        setUsers(fetchedUsers);
+        setLoading(false);
+      });
+    }
+  }, []);
+
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     let { name, value } = e.target;
-    if (name === "dueDate" && value && !value.includes("T")) {
-      value = value + "T00:00:00";
+    if (name === 'dueDate' && value && !value.includes('T')) {
+      value = value + 'T00:00:00';
     }
     onChange({ ...task, [name]: value });
   };
+
 
   return (
     <Form>
@@ -108,14 +125,25 @@ const TaskForm: React.FC<{
       <Form.Group controlId="formAssignedUser" className="mb-3">
         <Form.Label>Исполнитель</Form.Label>
         <Form.Control
+          as="select"
           name="assignedUser"
-          type="text"
-          value={task.assignedUser}
+          value={task.assignedUser || ''}
           onChange={handleChange}
           isInvalid={!!errors.assignedUser}
-          placeholder="Имя исполнителя"
-        />
-        <Form.Control.Feedback type="invalid">{errors.assignedUser}</Form.Control.Feedback>
+          disabled={loading}
+        >
+          <option value="" disabled>
+            {loading ? 'Загрузка...' : 'Выберите исполнителя'}
+          </option>
+          {users.map((user) => (
+            <option key={user.id} value={user.username}>
+              {user.username}
+            </option>
+          ))}
+        </Form.Control>
+        <Form.Control.Feedback type="invalid">
+          {errors.assignedUser}
+        </Form.Control.Feedback>
       </Form.Group>
 
       <Form.Group controlId="formStatus" className="mb-3">
@@ -150,9 +178,10 @@ const TaskForm: React.FC<{
   );
 };
 
-const CalendarModuleComponent: React.FC<CalendarProps> = ({
+const CalendarModuleComponent: React.FC<CalendarProps & { moduleId?: string }> = ({
   projectHubId,
-  timeTrackerAvailable,
+  moduleId,
+  isBaseModuleAvailable,
   newsAvailable,
 }) => {
   const [events, setEvents] = useState<BackendEvent[]>([]);
@@ -166,6 +195,19 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
   const [content, setContent] = useState("");
   const [type, setType] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const eventTypeOptions = [];
+
+  if (newsAvailable) {
+    eventTypeOptions.push({ value: "EVENT", label: "Событие" });
+  }
+
+  if (isBaseModuleAvailable) {
+    eventTypeOptions.push({ value: "TASK", label: "Задача" });
+  }
+
+  if (newsAvailable && isBaseModuleAvailable) {
+    eventTypeOptions.push({ value: "GOAL", label: "Цель" });
+  }
 
   // Управление данными задачи в модальном окне
   const [task, setTask] = useState<Task>({
@@ -182,7 +224,8 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+    resetForm();
+  }, [projectHubId, moduleId]);
 
   const fetchEvents = async () => {
     try {
@@ -246,6 +289,10 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
   };
 
   const handleSubmit = async () => {
+     if (!validateTask()) {
+    
+    return;
+    }
     if (!calendarTitle.trim()) {
       setError("Введите заголовок для календаря");
       return;
@@ -254,9 +301,15 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
       setError("Введите заголовок новости");
       return;
     }
-    if ((type === "TASK" || type === "GOAL") && timeTrackerAvailable && !validateTask()) {
-      return;
+    {
+      (type === "TASK" || type === "GOAL") && isBaseModuleAvailable && (
+        <>
+          <h1>Задача</h1>
+          <TaskForm key={moduleId} task={task} onChange={setTask} errors={taskErrors} />
+        </>
+      )
     }
+
     try {
       const eventResponse = await fetch(`${api.createEvent()}?hubId=${projectHubId}`, {
         method: "POST",
@@ -283,7 +336,7 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
         if (!newsResponse.ok) throw new Error(`Ошибка при создании новости: ${newsResponse.status}`);
       }
 
-      if ((type === "TASK" || type === "GOAL") && timeTrackerAvailable) {
+      if ((type === "TASK" || type === "GOAL") && isBaseModuleAvailable) {
         // Отправка задачи
         const taskResponse = await fetch(api.createTask() + `?hubId=${projectHubId}`, {
           method: "POST",
@@ -352,11 +405,11 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
         <Modal.Body>
           <Form.Group controlId="eventType" className="mb-3">
             <Form.Label>Тип события</Form.Label>
-            <Form.Select value={type} onChange={(e) => setType(e.target.value)}>
+            <Form.Select value={type} onChange={e => setType(e.target.value)}>
               <option value="">Не выбрано</option>
-              <option value="EVENT">Событие</option>
-              <option value="TASK">Задача</option>
-              <option value="GOAL">Цель</option>
+              {eventTypeOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </Form.Select>
           </Form.Group>
 
@@ -382,7 +435,7 @@ const CalendarModuleComponent: React.FC<CalendarProps> = ({
             </>
           )}
 
-          {(type === "TASK" || type === "GOAL") && timeTrackerAvailable && (
+          {(type === "TASK" || type === "GOAL") && isBaseModuleAvailable && (
             <>
               <h1>Задача</h1>
               <TaskForm task={task} onChange={setTask} errors={taskErrors} />

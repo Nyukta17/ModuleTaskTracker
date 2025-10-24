@@ -1,10 +1,8 @@
 package com.example.ModuleTaskMenadger.controller;
 
 import com.example.ModuleTaskMenadger.details.CustomUserDetails;
-import com.example.ModuleTaskMenadger.dto.JWTResponse;
-import com.example.ModuleTaskMenadger.dto.LoginRequest;
-import com.example.ModuleTaskMenadger.dto.RegisterRequest;
-import com.example.ModuleTaskMenadger.dto.RegistrationEmployee;
+import com.example.ModuleTaskMenadger.dto.*;
+import com.example.ModuleTaskMenadger.model.Users;
 import com.example.ModuleTaskMenadger.service.JWTservice;
 import com.example.ModuleTaskMenadger.service.UserService;
 import jakarta.validation.Valid;
@@ -16,14 +14,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -103,7 +99,13 @@ public class SecurityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-
+    @GetMapping("/get-users")
+    public List<UserDTO> getUsers(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        List<Users> users = userService.getAllUsersByCompanyID(customUserDetails.getCompanyId());
+        return users.stream()
+                .map(u -> new UserDTO(u.getId(),u.getUsername()))
+                .collect(Collectors.toList());
+    }
 
 
 }

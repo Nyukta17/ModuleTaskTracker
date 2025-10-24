@@ -62,6 +62,7 @@ public class TaskService {
             existingTask.setDescription(dto.getDescription());
             existingTask.setDueDate(dto.getDueDate());
             existingTask.setCompleted(dto.isCompleted());
+            existingTask.setStatus(dto.getStatus());
             // Можно добавить обновление других полей
             Task saved = taskRepository.save(existingTask);
             return convertToDto(saved);
@@ -82,6 +83,10 @@ public class TaskService {
         TaskDTO dto = new TaskDTO();
         dto.setId(task.getId());
         dto.setTitle(task.getTitle());
+        dto.setAssignedUser(
+                usersRepository.findByUsername(task.getAssignedUser().getUsername())
+                        .orElseThrow(() -> new RuntimeException("user not found")).getUsername()
+        );
         dto.setDescription(task.getDescription());
         dto.setDueDate(task.getDueDate());
         dto.setCompleted(task.isCompleted());

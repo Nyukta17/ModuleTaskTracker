@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Button, Alert, Spinner } from "react-bootstrap";
 import ApiRoute from "../../../api/ApiRoute";
+import { fetchCompanyUsers } from "../../Funcions/GetUsers";
 
 const api = new ApiRoute();
 
@@ -32,6 +33,17 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void;projectHubId:
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [users, setUsers] = useState<{ id: string; username: string }[]>([]);
+      const [loading, setLoading] = useState(false);
+      useEffect(() => {
+        if (users.length === 0 && !loading) {
+          setLoading(true);
+          fetchCompanyUsers().then(fetchedUsers => {
+            setUsers(fetchedUsers);
+            setLoading(false);
+          });
+        }
+      }, []);
   
   const validate = (): boolean => {
     const errs: { [key: string]: string } = {};
@@ -45,6 +57,7 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void;projectHubId:
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     let { name, value } = e.target;
+    
 
     if (name === "dueDate" && value) {
       
@@ -118,19 +131,29 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void;projectHubId:
         />
       </Form.Group>
 
-      <Form.Group controlId="formAssignedEmployee" className="mb-3">
-        <Form.Label>Исполнитель</Form.Label>
-        <Form.Control
-          name="assignedUser"
-          type="text"
-          value={task.assignedUser}
-          onChange={handleChange}
-          isInvalid={!!errors.assignedUser}
-          disabled={submitting}
-          placeholder="Имя исполнителя"
-        />
-        <Form.Control.Feedback type="invalid">{errors.assignedEmployee}</Form.Control.Feedback>
-      </Form.Group>
+      <Form.Group controlId="formAssignedUser" className="mb-3">
+              <Form.Label>Исполнитель</Form.Label>
+              <Form.Control
+                as="select"
+                name="assignedUser"
+                value={task.assignedUser || ''}
+                onChange={handleChange}
+                isInvalid={!!errors.assignedUser}
+                disabled={loading}
+              >
+                <option value="" disabled>
+                  {loading ? 'Загрузка...' : 'Выберите исполнителя'}
+                </option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.username}>
+                    {user.username}
+                  </option>
+                ))}
+              </Form.Control>
+              <Form.Control.Feedback type="invalid">
+                {errors.assignedUser}
+              </Form.Control.Feedback>
+            </Form.Group>
 
       <Form.Group controlId="formStatus" className="mb-3">
         <Form.Label>Статус</Form.Label>

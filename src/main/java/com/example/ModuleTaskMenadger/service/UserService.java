@@ -2,6 +2,7 @@ package com.example.ModuleTaskMenadger.service;
 
 import com.example.ModuleTaskMenadger.dto.RegisterRequest;
 import com.example.ModuleTaskMenadger.dto.RegistrationEmployee;
+import com.example.ModuleTaskMenadger.dto.UserDTO;
 import com.example.ModuleTaskMenadger.model.Company;
 import com.example.ModuleTaskMenadger.model.Role;
 import com.example.ModuleTaskMenadger.model.Users;
@@ -11,6 +12,7 @@ import com.example.ModuleTaskMenadger.repository.UsersRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -77,6 +79,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(employee.getPassword()));
         user.setEnabled(true);
         usersRepository.save(user);
+    }
+    public List<Users> getAllUsersByCompanyID(Long companyId){
+        return usersRepository.findByCompanyId(companyId);
     }
 
 }

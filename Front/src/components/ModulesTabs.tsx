@@ -28,7 +28,7 @@ interface ModulesTabsProps {
 
 const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const isTimeTrackerAvailable = modules.some(m => m.name.toUpperCase() === "TIME_TRACKER");
+  const isBaseModuleAvailable = modules.some(m => m.name.toUpperCase() === "BASE_MODULE");
   const isNewsAvailable = modules.some(m => m.name.toUpperCase() === "NEWS");
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
                   mod.name.toUpperCase() === "CALENDAR" ? (
                     <ModuleComponent
                       projectHubId={projectHubId}
-                      timeTrackerAvailable={isTimeTrackerAvailable}
+                      isBaseModuleAvailable={isBaseModuleAvailable}
                       newsAvailable={isNewsAvailable}
                     />
                   ) : (

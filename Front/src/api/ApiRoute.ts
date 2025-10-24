@@ -69,7 +69,7 @@ class ApiRoute {
     return `${this.BASE_URL}/task/create`;
   }
 
-  updateTask(id: number) {
+  updateTask(id: string) {
     return `${this.BASE_URL}/task/update/${id}`;
   }
 
