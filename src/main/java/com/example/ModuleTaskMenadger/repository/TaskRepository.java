@@ -9,5 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task,Long> {
-    List<Task> findByProjectIdAndCompanyId(Long projectId, Long companyId);
+    List<Task> findByProjectIdAndCompanyIdAndCompletedFalse(Long projectId, Long companyId);
+
+    List<Task> findByProjectIdAndAssignedUsers_IdAndCompletedFalse(Long projectId, Long userId);
+
 }

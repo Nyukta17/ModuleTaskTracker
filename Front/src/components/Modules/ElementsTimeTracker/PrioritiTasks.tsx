@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Container, Row, Col, Button, Form, Card } from "react-bootstrap";
+import { Container, Row, Col, Button, Form, Card, Spinner } from "react-bootstrap";
 import "./css/prioriti-tasks.css"
 
 interface Sticker {
@@ -16,6 +16,8 @@ const PrioritiTasks: React.FC = () => {
   const [newText, setNewText] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
 
   const addSticker = () => {
@@ -73,31 +75,25 @@ const PrioritiTasks: React.FC = () => {
     offsetY: number
   ) => {
     e.preventDefault();
-
     const onMouseMove = (moveEvent: MouseEvent) => {
       if (!boardRef.current) return;
       const rect = boardRef.current.getBoundingClientRect();
       let newX = moveEvent.clientX - rect.left - offsetX;
       let newY = moveEvent.clientY - rect.top - offsetY;
-
       newX = Math.max(0, Math.min(newX, rect.width - 220));
       newY = Math.max(0, Math.min(newY, rect.height - 200));
-
       setStickers((prev) =>
         prev.map((s) => (s.id === id ? { ...s, x: newX, y: newY } : s))
       );
     };
-
     const onMouseUp = () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  // Автоматическое изменение высоты textarea
   const AutoResizeTextarea: React.FC<{
     value: string;
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -133,17 +129,32 @@ const PrioritiTasks: React.FC = () => {
     );
   };
 
+  const handleSaveToServer = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await fetch("/api/save-prioriti-tasks", {  // Поставьте свой URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stickers }),
+      });
+      alert("Данные сохранены");
+    } catch (e) {
+      setError("Ошибка сохранения данных");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Container fluid>
       <Row className="mb-3 align-items-center">
-        <Col xs={9} md={10}>
+        <Col xs={9} md={8}>
           <Form.Control
             type="text"
             placeholder="Новая задача..."
             value={newText}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setNewText(e.target.value)
-            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewText(e.target.value)}
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") {
                 addSticker();
@@ -157,7 +168,20 @@ const PrioritiTasks: React.FC = () => {
             Добавить
           </Button>
         </Col>
+        <Col xs={12} md={2} className="d-flex justify-content-end">
+          <Button variant="success" onClick={handleSaveToServer} disabled={saving}>
+            {saving ? <Spinner animation="border" size="sm" /> : "Сохранить"}
+          </Button>
+        </Col>
       </Row>
+
+      {error && (
+        <Row className="mb-3">
+          <Col>
+            <div className="text-danger">{error}</div>
+          </Col>
+        </Row>
+      )}
 
       <div className="prioriti-tasks-board" ref={boardRef}>
         {stickers.map(({ id, text, x, y, done }) => (
@@ -172,10 +196,10 @@ const PrioritiTasks: React.FC = () => {
               minHeight: 80,
               maxWidth: 320,
               paddingTop: 25,
+              cursor: editingId === id ? "text" : "grab",
             }}
             onMouseDown={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
               const target = e.target as HTMLElement;
-              // Предотвратить драга при редактировании
               if (
                 !target.closest(".prioriti-sticker-close") &&
                 !target.closest("textarea") &&

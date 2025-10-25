@@ -1,10 +1,13 @@
 import React, { useState, useRef } from "react";
-import "./css/timeboard.css"
+import "./css/timeboard.css";
+import { Modal, Button } from "react-bootstrap";
+
 interface Marker {
   id: number;
   startHour: number;
   durationHours: number;
   verticalOffset: number;
+  title: string;
 }
 
 const HOURS = Array.from({ length: 10 }, (_, i) => i + 8);
@@ -17,6 +20,9 @@ const TimeBoard: React.FC = () => {
   const [startWidth, setStartWidth] = useState<number>(0);
   const [startVerticalOffset, setStartVerticalOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  const [modalMarker, setModalMarker] = useState<Marker | null>(null);
+  const [modalTitle, setModalTitle] = useState("");
 
   const boardRef = useRef<HTMLDivElement | null>(null);
 
@@ -42,7 +48,6 @@ const TimeBoard: React.FC = () => {
     return offset;
   };
 
-  // Создавать маркер только если не происходит drag/resize
   const onBoardClick = (e: React.MouseEvent) => {
     if (isDragging) {
       e.preventDefault();
@@ -60,6 +65,7 @@ const TimeBoard: React.FC = () => {
       startHour: Math.min(Math.max(hourClicked, 8), 17),
       durationHours: 1,
       verticalOffset: 0,
+      title: "Новая задача",
     };
 
     newMarker.verticalOffset = computeVerticalOffset(newMarker);
@@ -155,11 +161,48 @@ const TimeBoard: React.FC = () => {
     setMarkers([]);
   };
 
+  // Модальное окно
+  const openModal = (marker: Marker) => {
+    setModalMarker(marker);
+    setModalTitle(marker.title);
+  };
+
+  const handleModalSave = () => {
+    if (modalMarker) {
+      setMarkers((prev) =>
+        prev.map((m) =>
+          m.id === modalMarker.id ? { ...m, title: modalTitle } : m
+        )
+      );
+      setModalMarker(null);
+    }
+  };
+
+  // Аналитика - подсчёт общего времени
+
+
+  // Сохранить (пустой запрос, заполните URL)
+  const handleSaveToServer = async () => {
+    try {
+      await fetch("/api/save-timeboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markers }),
+      });
+      alert("Данные сохранены");
+    } catch (e) {
+      alert("Ошибка сохранения");
+    }
+  };
+
   return (
     <div className="timeboard-wrapper">
       <div className="timeboard-clear-button-container">
         <button className="timeboard-clear-button" onClick={clearMarkers}>
           Очистить
+        </button>
+        <button className="timeboard-save-button" onClick={handleSaveToServer}>
+          Сохранить
         </button>
       </div>
 
@@ -182,9 +225,8 @@ const TimeBoard: React.FC = () => {
           {markers.map((marker) => (
             <div
               key={marker.id}
-              className={`timeboard-marker ${
-                resizeId === marker.id || dragId === marker.id ? "timeboard-marker-active" : ""
-              }`}
+              className={`timeboard-marker ${resizeId === marker.id || dragId === marker.id ? "timeboard-marker-active" : ""
+                }`}
               style={{
                 left: (marker.startHour - 8) * (100 / HOURS.length) + "%",
                 width: (marker.durationHours * 100) / HOURS.length + "%",
@@ -193,7 +235,24 @@ const TimeBoard: React.FC = () => {
               onMouseDown={(e) => onDragMouseDown(e, marker.id)}
             >
               <div className="timeboard-marker-text">
-                {marker.startHour}:00 - {marker.startHour + marker.durationHours}:00
+                {marker.title} ({marker.startHour}:00 - {marker.startHour + marker.durationHours}:00)
+                <Button
+                  className="details-button"
+                  variant="dark"
+                  onClick={(e) => {
+                    e.stopPropagation();  // чтобы не вызвать drag или другие события
+                    openModal(marker);
+                  }}
+                  title="Подробнее"
+                  style={{
+                    marginLeft: "6px",
+                    fontSize: "0.7em",
+                    padding: "2px 5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  ⋯
+                </Button>
               </div>
               <div
                 className="timeboard-marker-resize-handle"
@@ -201,8 +260,32 @@ const TimeBoard: React.FC = () => {
               />
             </div>
           ))}
+
         </div>
       </div>
+
+      <Modal show={!!modalMarker} onHide={() => setModalMarker(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Редактирование задачи</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <input
+            type="text"
+            value={modalTitle}
+            onChange={(e) => setModalTitle(e.target.value)}
+            className="form-control"
+            autoFocus
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setModalMarker(null)}>
+            Отмена
+          </Button>
+          <Button variant="primary" onClick={handleModalSave}>
+            Сохранить
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

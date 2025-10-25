@@ -60,6 +60,9 @@ class ApiRoute {
   getAllTasks() {
     return `${this.BASE_URL}/task/all`;
   }
+  getTaskUsers(){
+    return`${this.BASE_URL}/task/get-users-task`
+  }
 
   getTaskById(id: number) {
     return `${this.BASE_URL}/task/${id}`;
@@ -75,6 +78,9 @@ class ApiRoute {
 
   deleteTask(id: number) {
     return `${this.BASE_URL}/task/delete/${id}`;
+  }
+  bulkCompleteTasks(){
+    return`${this.BASE_URL}/task/completed`
   }
 }
 

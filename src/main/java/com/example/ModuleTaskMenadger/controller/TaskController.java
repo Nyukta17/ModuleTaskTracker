@@ -1,11 +1,13 @@
 package com.example.ModuleTaskMenadger.controller;
 
 import com.example.ModuleTaskMenadger.details.CustomUserDetails;
+import com.example.ModuleTaskMenadger.dto.IdsWrapper;
 import com.example.ModuleTaskMenadger.dto.TaskDTO;
 import com.example.ModuleTaskMenadger.service.CustomUserDetailsService;
 import com.example.ModuleTaskMenadger.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.CustomAutowireConfigurer;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +26,13 @@ public class TaskController {
     public ResponseEntity<List<TaskDTO>> getAllTasks(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestParam("hubId")Long hubId) {
 
         List<TaskDTO> tasks = taskService.getAllTasks(hubId,customUserDetails.getCompanyId());
-        System.out.println(tasks);
         return ResponseEntity.ok(tasks);
+    }
+    @GetMapping("/get-users-task")
+    public ResponseEntity<List<TaskDTO>> getUsersTask(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestParam("hubId") Long id){
+
+        List<TaskDTO> taskDTOS =taskService.getUsersTask(id,customUserDetails.getUsername());
+        return ResponseEntity.ok(taskDTOS);
     }
 
     // Получить задачу по id
@@ -48,10 +55,16 @@ public class TaskController {
 
     // Обновить задачу по id
     @PutMapping("/update/{id}")
-    public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id, @RequestBody TaskDTO taskDTO) {
+    public ResponseEntity<TaskDTO> updateTask(@AuthenticationPrincipal CustomUserDetails customUserDetails, @PathVariable Long id, @RequestBody TaskDTO taskDTO) {
         return taskService.updateTask(id, taskDTO)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+    @PutMapping("/completed")
+    public ResponseEntity<?> completed_tasks(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestBody IdsWrapper wrapper){
+        List<Long> listId = wrapper.getIds();
+        taskService.markTasksCompleted(listId);
+        return ResponseEntity.ok().build();
     }
 
     // Удалить задачу по id

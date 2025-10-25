@@ -35,7 +35,7 @@ const TaskTrackerBaseComponent: React.FC<TaskTrackerBaseComponentProps> = ({ pro
             <Button variant="primary" className="mb-3" onClick={openTasks}>
               Создать задачу
             </Button>
-            <Kamban projectHubId={projectHubId}/>
+            <Kamban projectHubId={projectHubId} isActive={activeKey === 'kamban'}/>
           </div>
         </Tab>
 
@@ -52,7 +52,7 @@ const TaskTrackerBaseComponent: React.FC<TaskTrackerBaseComponentProps> = ({ pro
 
         <Tab eventKey="myTasks" title="Мои задачи">
           <div style={{ padding: 20, minHeight: 200 }}>
-            <MyTasks hubId={projectHubId} />
+            <MyTasks hubId={projectHubId} isActive={activeKey === "myTasks"} />
           </div>
         </Tab>
       </Tabs>

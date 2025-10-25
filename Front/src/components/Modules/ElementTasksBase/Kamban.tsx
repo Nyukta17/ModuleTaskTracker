@@ -20,9 +20,10 @@ const statuses: Task["status"][] = ["NEW", "IN_PROGRESS", "TESTING", "COMPLETED"
 
 interface MyComponentProps {
   projectHubId: string;
+  isActive:boolean;
 }
 
-const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId }) => {
+const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +48,12 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId }) => {
       setError(e.message);
     }
   };
-  useEffect(() => {
-    fetchTasks();
-    fetchUsers();
-  }, []);
+ useEffect(() => {
+    if (isActive) {
+      fetchTasks();
+      fetchUsers();
+    }
+  }, [isActive, projectHubId]);
 
   const fetchTasks = async () => {
     if (!token) {
@@ -127,6 +130,34 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId }) => {
         <div className="text-danger">Ошибка: {error}</div>
       </Container>
     );
+    const bulkCompleteTasks = async () => {
+  if (!token) return;
+  try {
+    const completedTaskIds = tasks
+      .filter(t => t.status === "COMPLETED")
+      .map(t => t.id);
+
+    if (completedTaskIds.length === 0) return;
+
+    const res = await fetch(api.bulkCompleteTasks(), {
+      method: "PUT", // или POST, как настроено
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids: completedTaskIds }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Ошибка массового обновления задач");
+    }
+
+    await fetchTasks(); // Обновить список задач после успешной операции
+  } catch (e: any) {
+    setError(e.message);
+  }
+};
+
 
   return (
     <Container fluid>
@@ -148,9 +179,7 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId }) => {
                 size="sm"
                 className="ms-2"
                 title="Отправить все выполненные задачи"
-                onClick={() => {
-                  // здесь ваша логика массовой отправки
-                }}
+                onClick={bulkCompleteTasks}
               >
                 ✔
               </Button>

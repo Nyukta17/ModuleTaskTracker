@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class TaskService {
     // Получить все задачи
     public List<TaskDTO> getAllTasks(Long projectId,Long companyId) {
         try {
-            List<Task> tasks = taskRepository.findByProjectIdAndCompanyId(projectId, companyId);
+            List<Task> tasks = taskRepository.findByProjectIdAndCompanyIdAndCompletedFalse(projectId, companyId);
             return tasks.stream()
                     .map(this::convertToDto)
                     .collect(Collectors.toList());
@@ -40,6 +41,22 @@ public class TaskService {
             throw new RuntimeException("Ошибка при получении задач", e);
 
         }
+    }
+    public List<TaskDTO> getUsersTask(Long projectId,String user){
+        Long userId = usersRepository.findByUsername(user).orElseThrow(()->(new RuntimeException("not found"))).getId();
+        List<Task> tasks=taskRepository.findByProjectIdAndAssignedUsers_IdAndCompletedFalse(projectId,userId);
+        return tasks.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+    @Transactional
+    public void markTasksCompleted(List<Long> taskIds) {
+
+        List<Task> tasks = taskRepository.findAllById(taskIds);
+        for (Task task : tasks) {
+            task.setCompleted(true);
+        }
+        taskRepository.saveAll(tasks);
     }
 
     // Получить задачу по ID
@@ -63,6 +80,7 @@ public class TaskService {
             existingTask.setDueDate(dto.getDueDate());
             existingTask.setCompleted(dto.isCompleted());
             existingTask.setStatus(dto.getStatus());
+            existingTask.setAssignedUser(usersRepository.findByUsername(dto.getAssignedUser()).orElseThrow(()->(new NoSuchElementException())));
             // Можно добавить обновление других полей
             Task saved = taskRepository.save(existingTask);
             return convertToDto(saved);
