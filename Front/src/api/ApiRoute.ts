@@ -14,6 +14,9 @@ class ApiRoute {
   generateRegLink(){
     return `${this.BASE_URL}/auth/generate-registration-link`
   }
+  getUsers(){
+    return `${this.BASE_URL}/auth/users/no-admins`
+  }
 
 
   creaeProject(){
@@ -81,6 +84,38 @@ class ApiRoute {
   }
   bulkCompleteTasks(){
     return`${this.BASE_URL}/task/completed`
+  }
+
+  saveTimeBoard(id:string){
+    return `${this.BASE_URL}`+`/timeTracker/saveTimeBoard?hubId=${id}`
+  }
+  getMarkers(id:string){
+    return`${this.BASE_URL}`+`/timeTracker/getMarkers?hubId=${id}`
+  }
+  clearMarkers(){
+    return`${this.BASE_URL}`+`/timeTracker/clearMarkers`
+  }
+  clearMarker(id:number){
+    return`${this.BASE_URL}`+`/timeTracker/clearMarker?markerId=${id}`
+  }
+
+  getStickers(id:string){
+    return`${this.BASE_URL}`+`/stickers/getStickers?hubId=${id}`
+  }
+  createSticker(id:string){
+    return`${this.BASE_URL}`+`/stickers/createSticker?hubId=${id}`
+  }
+  deleteSticker(id:number){
+    return `${this.BASE_URL}/stickers/deleteSticker/${id}`
+  }
+  deleteStickers(){
+    return `${this.BASE_URL}/stickers/deleteStickers`
+  }
+  updateSticker(id:number){
+    return `${this.BASE_URL}/stickers/updateSticker/${id}` 
+  }
+  saveAllStirckers(id:string){
+    return`${this.BASE_URL}/stickers/saveAll?hubId=${id}`
   }
 }
 

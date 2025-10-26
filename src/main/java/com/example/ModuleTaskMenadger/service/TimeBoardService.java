@@ -1,13 +1,17 @@
 package com.example.ModuleTaskMenadger.service;
 
 import com.example.ModuleTaskMenadger.dto.MarkerDTO;
+import com.example.ModuleTaskMenadger.model.Project;
 import com.example.ModuleTaskMenadger.model.TimeBoardMarker;
+import com.example.ModuleTaskMenadger.model.Users;
 import com.example.ModuleTaskMenadger.repository.ProjectRepository;
+import com.example.ModuleTaskMenadger.repository.TimeBoardMarkerRepository;
 import com.example.ModuleTaskMenadger.repository.UsersRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TimeBoardService {
@@ -17,7 +21,7 @@ public class TimeBoardService {
     private final ProjectRepository projectRepository;
 
     public TimeBoardService(TimeBoardMarkerRepository markerRepository,
-                            UserRepository userRepository,
+                            UsersRepository userRepository,
                             ProjectRepository projectRepository) {
         this.markerRepository = markerRepository;
         this.userRepository = userRepository;
@@ -45,5 +49,32 @@ public class TimeBoardService {
 
         markerRepository.saveAll(markers);
     }
+    @Transactional
+    public List<MarkerDTO> getMarkersDtoByProjectAndUser(Long projectId, String username) {
+        List<TimeBoardMarker> markers = markerRepository.findByProjectIdAndUsersUsername(projectId, username);
+        return markers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+    @Transactional
+    public void clearMarkersByIds(List<Long> ids) {
+        markerRepository.deleteAllById(ids);
+    }
+    @Transactional
+    public void clearMarkerById(Long id) {
+        markerRepository.deleteById(id);
+    }
+
+    // Преобразование Entity в DTO
+    private MarkerDTO convertToDto(TimeBoardMarker marker) {
+        MarkerDTO dto = new MarkerDTO();
+        dto.setId(marker.getId());
+        dto.setStartHour(marker.getStartHour());
+        dto.setDurationHours(marker.getDurationHours());
+        dto.setVerticalOffset(marker.getVerticalOffset());
+        dto.setTitle(marker.getTitle());
+        return dto;
+    }
+
 }
 

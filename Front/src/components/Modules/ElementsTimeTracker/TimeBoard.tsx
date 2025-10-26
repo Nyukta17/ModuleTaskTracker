@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./css/timeboard.css";
 import { Modal, Button } from "react-bootstrap";
+import ApiRoute from "../../../api/ApiRoute";
 
 interface Marker {
   id: number;
@@ -10,9 +11,14 @@ interface Marker {
   title: string;
 }
 
+interface MyTasksProps {
+  hubId: string;
+}
+
+const api = new ApiRoute();
 const HOURS = Array.from({ length: 10 }, (_, i) => i + 8);
 
-const TimeBoard: React.FC = () => {
+const TimeBoard: React.FC<MyTasksProps> = ({ hubId }) => {
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [resizeId, setResizeId] = useState<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
@@ -25,6 +31,28 @@ const TimeBoard: React.FC = () => {
   const [modalTitle, setModalTitle] = useState("");
 
   const boardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const fetchMarkers = async () => {
+      try {
+        const response = await fetch(api.getMarkers(hubId), {
+          headers: {
+            Authorization: `Bearer ` + localStorage.getItem("jwtToken"),
+            Accept: "application/json",
+          },
+        });
+        if (response.ok) {
+          const data: Marker[] = await response.json();
+          setMarkers(data);
+        } else {
+          console.error("Ошибка загрузки маркеров:", response.statusText);
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки маркеров:", err);
+      }
+    };
+    fetchMarkers();
+  }, [hubId]);
 
   const computeVerticalOffset = (newMarker: Marker) => {
     const markerHeight = 50;
@@ -39,14 +67,84 @@ const TimeBoard: React.FC = () => {
     let offset = 0;
     while (
       overlappingMarkers.some(
-        (m) =>
-          Math.abs((m.verticalOffset || 0) - offset) < markerHeight + gap
+        (m) => Math.abs((m.verticalOffset || 0) - offset) < markerHeight + gap
       )
     ) {
       offset += markerHeight + gap;
     }
     return offset;
   };
+
+  // Удаление одного маркера через API
+  const deleteMarker = async (id: number) => {
+    try {
+      const response = await fetch(
+        api.clearMarker(id), // подставьте URL удаления одного маркера, например `/api/timeboard/deleteMarker?id=${id}`
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ` + localStorage.getItem("jwtToken"),
+          },
+        }
+      );
+      if (response.ok) {
+        setMarkers((prev) => prev.filter((marker) => marker.id !== id));
+        setModalMarker(null);
+      } else {
+        console.error("Ошибка удаления маркера:", response.statusText);
+      }
+    } catch (err) {
+      console.error("Ошибка удаления маркера:", err);
+    }
+  };
+
+  // Удаление всех маркеров через API, отправляя список id
+  const clearMarkersOnServer = async () => {
+    try {
+      const ids = markers.map((m) => m.id);
+      const response = await fetch(
+        api.clearMarkers(),
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ` + localStorage.getItem("jwtToken"),
+          },
+          body: JSON.stringify(ids),
+        }
+      );
+      if (response.ok) {
+        setMarkers([]);
+      } else {
+        console.error("Ошибка очистки маркеров:", response.statusText);
+      }
+    } catch (err) {
+      console.error("Ошибка очистки маркеров:", err);
+    }
+  };
+
+  const handleSaveToServer = async () => {
+  try {
+    const response = await fetch(api.saveTimeBoard(hubId), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ` + localStorage.getItem("jwtToken"),
+      },
+      body: JSON.stringify(markers),
+    });
+    if (response.ok) {
+      console.log("Маркиры успешно сохранены на сервере");
+    } else {
+      console.error("Ошибка при сохранении маркеров:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Ошибка при сохранении маркеров:", error);
+  }
+};
+
+
+  // Остальной код (обработчики, рендер и т.д.) без изменений
 
   const onBoardClick = (e: React.MouseEvent) => {
     if (isDragging) {
@@ -117,7 +215,6 @@ const TimeBoard: React.FC = () => {
       );
     } else if (dragId !== null && dragStartPos) {
       const deltaY = e.clientY - dragStartPos.y;
-
       let newOffset = startVerticalOffset + deltaY;
       newOffset = Math.max(0, newOffset);
 
@@ -137,15 +234,16 @@ const TimeBoard: React.FC = () => {
       const gap = 6;
       while (
         overlappingMarkers.some(
-          (m) =>
-            Math.abs((m.verticalOffset || 0) - newOffset) < markerHeight + gap
+          (m) => Math.abs((m.verticalOffset || 0) - newOffset) < markerHeight + gap
         )
       ) {
         newOffset += markerHeight + gap;
       }
 
       setMarkers((prev) =>
-        prev.map((m) => (m.id === dragId ? { ...m, verticalOffset: newOffset } : m))
+        prev.map((m) =>
+          m.id === dragId ? { ...m, verticalOffset: newOffset } : m
+        )
       );
     }
   };
@@ -158,10 +256,9 @@ const TimeBoard: React.FC = () => {
   };
 
   const clearMarkers = () => {
-    setMarkers([]);
+    clearMarkersOnServer();
   };
 
-  // Модальное окно
   const openModal = (marker: Marker) => {
     setModalMarker(marker);
     setModalTitle(marker.title);
@@ -170,28 +267,15 @@ const TimeBoard: React.FC = () => {
   const handleModalSave = () => {
     if (modalMarker) {
       setMarkers((prev) =>
-        prev.map((m) =>
-          m.id === modalMarker.id ? { ...m, title: modalTitle } : m
-        )
+        prev.map((m) => (m.id === modalMarker.id ? { ...m, title: modalTitle } : m))
       );
       setModalMarker(null);
     }
   };
 
-  // Аналитика - подсчёт общего времени
-
-
-  // Сохранить (пустой запрос, заполните URL)
-  const handleSaveToServer = async () => {
-    try {
-      await fetch("/api/save-timeboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markers }),
-      });
-      alert("Данные сохранены");
-    } catch (e) {
-      alert("Ошибка сохранения");
+  const handleDeleteMarker = () => {
+    if (modalMarker) {
+      deleteMarker(modalMarker.id);
     }
   };
 
@@ -225,10 +309,13 @@ const TimeBoard: React.FC = () => {
           {markers.map((marker) => (
             <div
               key={marker.id}
-              className={`timeboard-marker ${resizeId === marker.id || dragId === marker.id ? "timeboard-marker-active" : ""
-                }`}
+              className={`timeboard-marker ${
+                resizeId === marker.id || dragId === marker.id
+                  ? "timeboard-marker-active"
+                  : ""
+              }`}
               style={{
-                left: (marker.startHour - 8) * (100 / HOURS.length) + "%",
+                left: ((marker.startHour - 8) * 100) / HOURS.length + "%",
                 width: (marker.durationHours * 100) / HOURS.length + "%",
                 top: marker.verticalOffset,
               }}
@@ -240,16 +327,11 @@ const TimeBoard: React.FC = () => {
                   className="details-button"
                   variant="dark"
                   onClick={(e) => {
-                    e.stopPropagation();  // чтобы не вызвать drag или другие события
+                    e.stopPropagation();
                     openModal(marker);
                   }}
                   title="Подробнее"
-                  style={{
-                    marginLeft: "6px",
-                    fontSize: "0.7em",
-                    padding: "2px 5px",
-                    cursor: "pointer",
-                  }}
+                  style={{ marginLeft: "6px", fontSize: "0.7em", padding: "2px 5px", cursor: "pointer" }}
                 >
                   ⋯
                 </Button>
@@ -260,7 +342,6 @@ const TimeBoard: React.FC = () => {
               />
             </div>
           ))}
-
         </div>
       </div>
 
@@ -278,6 +359,9 @@ const TimeBoard: React.FC = () => {
           />
         </Modal.Body>
         <Modal.Footer>
+          <Button variant="danger" onClick={handleDeleteMarker}>
+            Удалить
+          </Button>
           <Button variant="secondary" onClick={() => setModalMarker(null)}>
             Отмена
           </Button>

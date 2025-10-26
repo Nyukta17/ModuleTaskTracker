@@ -5,10 +5,13 @@ import Pomodoro from "./ElementsTimeTracker/Pomodoro";
 import PrioritiTasks from "./ElementsTimeTracker/PrioritiTasks";
 import TimeBoard from "./ElementsTimeTracker/TimeBoard";
 
-const TimeTrackerModuleComponent: React.FC = () => {
-  const [activeKey, setActiveKey] = useState<string>("pomodoro");
+interface MyProps{
+  projectHubId: string;
+}
 
-  // Здесь можно добавить функции для работы с бекендом (пока пусто)
+const TimeTrackerModuleComponent: React.FC<MyProps> = ({projectHubId}) => {
+  const [activeKey, setActiveKey] = useState<string>("pomodoro");
+ 
 
   return (
     <>
@@ -25,12 +28,12 @@ const TimeTrackerModuleComponent: React.FC = () => {
         </Tab>
         <Tab eventKey="timeBoard" title="Доска Времени">
           <div style={{ padding: 20, minHeight: 200 }}>
-            <TimeBoard />
+            <TimeBoard hubId={projectHubId} />
           </div>
         </Tab>
         <Tab eventKey="prioritiTasks" title="Мои заметки">
           <div style={{ padding: 20, minHeight: 200 }}>
-            <PrioritiTasks />
+            <PrioritiTasks hubId={projectHubId} />
           </div>
         </Tab>
       </Tabs>

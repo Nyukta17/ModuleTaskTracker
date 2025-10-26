@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -66,6 +67,8 @@ public class UserService {
 
         usersRepository.save(user);
     }
+
+
     public void registerEmployee(RegistrationEmployee employee){
         if(usersRepository.findByUsername(employee.getUsername()).isPresent()){
             throw  new IllegalArgumentException("Username is already taken");
@@ -83,6 +86,20 @@ public class UserService {
     public List<Users> getAllUsersByCompanyID(Long companyId){
         return usersRepository.findByCompanyId(companyId);
     }
-
+    public List<UserDTO> getAllExceptAdmins() {
+        return usersRepository.findAllExceptAdmins().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+    public UserDTO toDto(Users user) {
+        if (user == null) return null;
+        UserDTO dto = new UserDTO(user.getId(), user.getUsername());
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            dto.setRole(user.getRoles().iterator().next().getName());
+        } else {
+            dto.setRole("UNKNOWN");
+        }
+        return dto;
+    }
 }
 

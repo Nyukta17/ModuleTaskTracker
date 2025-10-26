@@ -30,7 +30,6 @@ const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const isBaseModuleAvailable = modules.some(m => m.name.toUpperCase() === "BASE_MODULE");
   const isNewsAvailable = modules.some(m => m.name.toUpperCase() === "NEWS");
-
   useEffect(() => {
     if (modules.length > 0 && modules[0].id !== undefined && modules[0].id !== null) {
       setActiveKey(modules[0].id.toString());
@@ -42,7 +41,7 @@ const ModulesTabs: React.FC<ModulesTabsProps> = ({ modules, projectHubId }) => {
   if (modules.length === 0) {
     return <div>Нет модулей для отображения</div>;
   }
-
+  
   return (
     <Tabs
       id="modules-tabs"

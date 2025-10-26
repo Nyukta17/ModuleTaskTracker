@@ -106,6 +106,12 @@ public class SecurityController {
                 .map(u -> new UserDTO(u.getId(),u.getUsername()))
                 .collect(Collectors.toList());
     }
+    @GetMapping("/users/no-admins")
+    public ResponseEntity<List<UserDTO>> getUsersExceptAdmins() {
+        List<UserDTO> users = userService.getAllExceptAdmins();
+        return ResponseEntity.ok(users);
+    }
+
 
 
 }

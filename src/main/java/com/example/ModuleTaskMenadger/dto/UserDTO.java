@@ -3,6 +3,7 @@ package com.example.ModuleTaskMenadger.dto;
 public class UserDTO {
     private Long id;
     private String username;
+    private String role;
 
     public UserDTO(Long id ,String username) {
         this.id =id;
@@ -23,5 +24,13 @@ public class UserDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
