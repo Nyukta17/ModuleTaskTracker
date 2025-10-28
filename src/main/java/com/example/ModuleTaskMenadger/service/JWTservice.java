@@ -17,10 +17,11 @@ public class JWTservice {
     private final SecretKey secretKey = Keys.hmacShaKeyFor("ОченьДлинныйСекретныйКлючДляПодписиJWT".getBytes());
     private final long expirationTime = 3600000; // 1 час
 
-    public String generateToken(String username, String role, Long companyId){
+    public String generateToken(String username, String role, Long companyId,Long userId){
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
+                .claim("userId",userId)
                 .claim("companyId", companyId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))

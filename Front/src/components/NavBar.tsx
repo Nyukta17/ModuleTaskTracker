@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { Navbar, Nav, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-const NavBar = () => {
+interface NavBarProps {
+  setToken: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+const NavBar: React.FC<NavBarProps> = ({ setToken })  => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -31,8 +35,8 @@ const NavBar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
-    
-    navigate('/login');
+    setToken(null); // обновляем состояние в App
+    navigate('/login'); // перенаправление на страницу логина
   };
 
   const goToAdmin = () => {

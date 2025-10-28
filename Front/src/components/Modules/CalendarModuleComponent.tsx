@@ -289,70 +289,79 @@ const CalendarModuleComponent: React.FC<CalendarProps & { moduleId?: string }> =
   };
 
   const handleSubmit = async () => {
-     if (!validateTask()) {
-    
+  // Общая валидация обязательных полей для всех типов
+  if (!calendarTitle.trim()) {
+    setError("Введите заголовок для календаря");
     return;
-    }
-    if (!calendarTitle.trim()) {
-      setError("Введите заголовок для календаря");
-      return;
-    }
-    if ((type === "EVENT" || type === "GOAL") && newsAvailable && !newsTitle.trim()) {
-      setError("Введите заголовок новости");
-      return;
-    }
-    {
-      (type === "TASK" || type === "GOAL") && isBaseModuleAvailable && (
-        <>
-          <h1>Задача</h1>
-          <TaskForm key={moduleId} task={task} onChange={setTask} errors={taskErrors} />
-        </>
-      )
-    }
+  }
 
-    try {
-      const eventResponse = await fetch(`${api.createEvent()}?hubId=${projectHubId}`, {
+  if ((type === "EVENT" || type === "GOAL") && newsAvailable && !newsTitle.trim()) {
+    setError("Введите заголовок новости");
+    return;
+  }
+
+  // Валидация и отправка задачи только для TASK и GOAL с базовой доступностью
+  if ((type === "TASK" || type === "GOAL") && isBaseModuleAvailable) {
+    if (!validateTask()) {
+      return; // Не отправлять, если ошибка валидации задачи
+    }
+  }
+
+  try {
+    // Отправка календарного события (всегда)
+    const eventResponse = await fetch(`${api.createEvent()}?hubId=${projectHubId}`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        title: calendarTitle,
+        startDateTime: formatLocalDateTime(selectedStartDate),
+        endDateTime: formatLocalDateTime(selectedEndDate),
+        type,
+      }),
+    });
+    if (!eventResponse.ok) throw new Error(`Ошибка ${eventResponse.status}`);
+
+    // Отправка новости (если нужно)
+    if ((type === "EVENT" || type === "GOAL") && newsAvailable) {
+      const newsResponse = await fetch(api.createNewsCompany() + `?hubId=${projectHubId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { 
+          "Content-Type": "application/json", 
+          Authorization: `Bearer ${token}` 
+        },
         body: JSON.stringify({
-          title: calendarTitle,
-          startDateTime: formatLocalDateTime(selectedStartDate),
-          endDateTime: formatLocalDateTime(selectedEndDate),
-          type,
+          title: newsTitle || calendarTitle,
+          content,
+          projectHubId,
         }),
       });
-      if (!eventResponse.ok) throw new Error(`Ошибка ${eventResponse.status}`);
-
-      if ((type === "EVENT" || type === "GOAL") && newsAvailable) {
-        const newsResponse = await fetch(api.createNewsCompany() + `?hubId=${projectHubId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            title: newsTitle || calendarTitle,
-            content,
-            projectHubId,
-          }),
-        });
-        if (!newsResponse.ok) throw new Error(`Ошибка при создании новости: ${newsResponse.status}`);
-      }
-
-      if ((type === "TASK" || type === "GOAL") && isBaseModuleAvailable) {
-        // Отправка задачи
-        const taskResponse = await fetch(api.createTask() + `?hubId=${projectHubId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify(task),
-        });
-        if (!taskResponse.ok) throw new Error(`Ошибка при создании задачи: ${taskResponse.status}`);
-      }
-
-      setShowModal(false);
-      resetForm();
-      fetchEvents();
-    } catch (e: any) {
-      setError(e.message);
+      if (!newsResponse.ok) throw new Error(`Ошибка при создании новости: ${newsResponse.status}`);
     }
-  };
+
+    // Отправка задачи (если нужно)
+    if ((type === "TASK" || type === "GOAL") && isBaseModuleAvailable) {
+      const taskResponse = await fetch(api.createTask() + `?hubId=${projectHubId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json", 
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(task),
+      });
+      if (!taskResponse.ok) throw new Error(`Ошибка при создании задачи: ${taskResponse.status}`);
+    }
+
+    setShowModal(false);
+    resetForm();
+    fetchEvents();
+  } catch (e: any) {
+    setError(e.message);
+  }
+};
+
 
   const handleEventClick = (clickInfo: any) => {
     setSelectedEventId(clickInfo.event.id);

@@ -9,11 +9,11 @@ import com.example.ModuleTaskMenadger.model.Users;
 import com.example.ModuleTaskMenadger.repository.CompanyRepository;
 import com.example.ModuleTaskMenadger.repository.RoleRepository;
 import com.example.ModuleTaskMenadger.repository.UsersRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -83,11 +83,33 @@ public class UserService {
         user.setEnabled(true);
         usersRepository.save(user);
     }
+
+    @Transactional
+    public void changeUserRole(Long userId, String newRoleName) {
+        if (newRoleName != null) {
+            newRoleName = newRoleName.replace("\"", "");
+        }
+        Optional<Users> optionalUser = usersRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+            Optional<Role> role = roleRepository.findByName(newRoleName);
+            if (role.isPresent()) {
+                Set<Role> newRoles = new HashSet<>();
+                newRoles.add(role.get());
+                user.setRoles(newRoles);  // Обязательно изменяемая коллекция
+                usersRepository.save(user);
+            } else {
+                throw new IllegalArgumentException("Role not found: " + newRoleName);
+            }
+        } else {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
+    }
     public List<Users> getAllUsersByCompanyID(Long companyId){
         return usersRepository.findByCompanyId(companyId);
     }
-    public List<UserDTO> getAllExceptAdmins() {
-        return usersRepository.findAllExceptAdmins().stream()
+    public List<UserDTO> getAllExceptAdmins(Long companyId) {
+        return usersRepository.findAllExceptAdminsByCompanyId(companyId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }

@@ -1,5 +1,7 @@
 package com.example.ModuleTaskMenadger.dto;
 
+import com.example.ModuleTaskMenadger.Enum.ProjectStatus;
+
 import java.util.List;
 
 public class ProjectDTO {
@@ -8,6 +10,7 @@ public class ProjectDTO {
     private String description;
     private Long companyId;
     private List<String> modules;
+    private ProjectStatus projectStatus;
 
     public Long getId() {
         return id;
@@ -47,6 +50,14 @@ public class ProjectDTO {
 
     public void setCompanyId(Long companyId) {
         this.companyId = companyId;
+    }
+
+    public ProjectStatus getProjectStatus() {
+        return projectStatus;
+    }
+
+    public void setProjectStatus(ProjectStatus projectStatus) {
+        this.projectStatus = projectStatus;
     }
     // геттеры и сеттеры
 }

@@ -2,13 +2,16 @@ package com.example.ModuleTaskMenadger.controller;
 
 import com.example.ModuleTaskMenadger.details.CustomUserDetails;
 import com.example.ModuleTaskMenadger.dto.NewsDTO;
+import com.example.ModuleTaskMenadger.repository.NewsRepository;
 import com.example.ModuleTaskMenadger.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -16,10 +19,11 @@ import java.util.Optional;
 public class NewsController {
 
     private final NewsService newsService;
-
+    private final NewsRepository newsRepository;
     @Autowired
-    public NewsController(NewsService newsService) {
+    public NewsController(NewsService newsService,NewsRepository newsRepository) {
         this.newsService = newsService;
+        this.newsRepository = newsRepository;
     }
 
     // Получить список всех новостей
@@ -71,5 +75,10 @@ public class NewsController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Long>> countNewsByHub(@RequestParam Long hubId) {
+        long count = newsRepository.countByProjectId(hubId);
+        return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
 }

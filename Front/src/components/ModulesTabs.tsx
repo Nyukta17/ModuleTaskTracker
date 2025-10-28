@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { Tabs, Tab } from "react-bootstrap";
 import NewsModuleComponent from "./Modules/NewsModuleComponent";
 import CalendarModuleComponent from "./Modules/CalendarModuleComponent";
-import AnalyticsModuleComponent from "./Modules/AnalyticsModuleComponent";
+import AnalyticsModuleComponent from "./Modules/AnalyticsModuleComponent"
 import TimeTrackerModuleComponent from "./Modules/TimeTrackerModuleComponent";
 import TaskTrackerBaseComponent from "./Modules/TaskTrackerBaseComponent";
 

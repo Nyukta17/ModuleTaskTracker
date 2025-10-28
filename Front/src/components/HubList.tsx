@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Container, Row, Col, Card, Button, Form, Modal } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Form, Modal, Dropdown } from "react-bootstrap";
 import ApiRoute from "../api/ApiRoute";
 import { useNavigate } from "react-router-dom";
 
@@ -7,9 +7,11 @@ interface ProjectHub {
   id: number;
   name: string;
   description?: string;
+  projectStatus?: string;
 }
 
 const allModules = ["NEWS", "CALENDAR", "ANALYTICS", "TIME_TRACKER"];
+const allStatuses = ["ACTIVE", "CLOSED", "ARCHIVED"];
 
 const api = new ApiRoute();
 
@@ -36,6 +38,11 @@ const HubList: React.FC = () => {
   const [newHubDescription, setNewHubDescription] = useState("");
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
+ 
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [activeHub, setActiveHub] = useState<ProjectHub | null>(null);
+  const [newStatus, setNewStatus] = useState<string>("ACTIVE");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,8 +73,12 @@ const HubList: React.FC = () => {
         return;
       }
 
-      const hubsData = await response.json();
-      setHubs(hubsData);
+      const hubsData: ProjectHub[] = await response.json();
+
+      // Отобразить только активные хабы
+      const activeHubs = hubsData.filter(hub => hub.projectStatus === "ACTIVE");
+
+      setHubs(activeHubs);
     } catch (error) {
       console.error("Ошибка сети при получении хабов", error);
     }
@@ -108,10 +119,9 @@ const HubList: React.FC = () => {
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      // Если пользователь не выбрал модули, отправляем "BASE_MODULE" по умолчанию
-     const modulesToSend = selectedModules.includes("BASE_MODULE")
-      ? selectedModules
-      : ["BASE_MODULE", ...selectedModules];
+      const modulesToSend = selectedModules.includes("BASE_MODULE")
+        ? selectedModules
+        : ["BASE_MODULE", ...selectedModules];
 
       const response = await fetch(api.creaeProject(), {
         method: "POST",
@@ -134,32 +144,104 @@ const HubList: React.FC = () => {
         return;
       }
 
-      // После успешного создания загрузить обновленный список хабов
       await fetchHubs();
-
       closeForm();
     } catch (error) {
       console.error("Ошибка сети при создании хаба", error);
     }
   };
 
+ 
+
+  const openStatusModal = (hub: ProjectHub) => {
+    setActiveHub(hub);
+    setNewStatus(hub.projectStatus || "ACTIVE");
+    setShowStatusModal(true);
+  };
+
+  const closeStatusModal = () => {
+    setShowStatusModal(false);
+    setActiveHub(null);
+  };
+
+  // Передаем объект с полем status как строкой, чтобы backend успешно десериализовал
+  const handleConfirmStatusChange = async () => {
+    if (!activeHub) return;
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const response = await fetch(api.changeStatus(activeHub.id), {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(newStatus ), // Передаем как объект с полем status
+      });
+
+      if (!response.ok) {
+        console.error("Ошибка при обновлении статуса");
+        return;
+      }
+
+      await fetchHubs();
+      closeStatusModal();
+    } catch (error) {
+      console.error("Ошибка сети при обновлении статуса", error);
+    }
+  };
+
   return (
     <Container className="mt-5">
-      <h2 className="mb-4">Список хабов проектов</h2>
+      <h2 className="mb-4">Список активных хабов проектов</h2>
 
       <Row xs={1} sm={2} md={3} lg={4} className="g-4">
         {hubs.map(hub => (
-          <Col key={hub.id} onClick={() => goToHub(hub.id, hub.name)}>
-            <Card className="h-100 shadow-sm" style={{ cursor: "pointer" }}>
-              <Card.Body>
-                <Card.Title className="fw-bold">{hub.name}</Card.Title>
+          <Col key={hub.id}>
+            <Card className="h-100 shadow-sm">
+              <Card.Body
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('.dropdown')) {
+                    e.stopPropagation();
+                  } else {
+                    goToHub(hub.id, hub.name);
+                  }
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <Card.Title className="fw-bold d-flex justify-content-between align-items-center">
+                  {hub.name}
+                  {userRole === "ROLE_ADMIN" && (
+                    <Dropdown>
+                      <Dropdown.Toggle
+                        variant="secondary"
+                        id={`dropdown-status-${hub.id}`}
+                        size="sm"
+                      >
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => openStatusModal(hub)}>
+                          Изменить статус
+                        </Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  )}
+                </Card.Title>
                 <Card.Text className="text-muted">{hub.description || "Без описания"}</Card.Text>
+                {hub.projectStatus && (
+                  <div>
+                    <strong>Статус: </strong> {hub.projectStatus}
+                  </div>
+                )}
               </Card.Body>
+
+
+
             </Card>
           </Col>
         ))}
-
-        {/* Кнопка создания только для админа */}
         {userRole === "ROLE_ADMIN" && (
           <Col>
             <Card
@@ -214,7 +296,7 @@ const HubList: React.FC = () => {
 
             <Form.Group controlId="hubModules" className="mb-3">
               <Form.Label>Выберите модули</Form.Label>
-              {allModules.map(module => (
+              {allModules.map((module) => (
                 <Form.Check
                   key={module}
                   type="checkbox"
@@ -235,6 +317,35 @@ const HubList: React.FC = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      <Modal show={showStatusModal} onHide={closeStatusModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Изменить статус проекта</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group controlId="selectStatus">
+            <Form.Label>Выберите новый статус</Form.Label>
+            <Form.Select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+            >
+              {allStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeStatusModal}>
+            Отмена
+          </Button>
+          <Button variant="primary" onClick={handleConfirmStatusChange}>
+            Подтвердить
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

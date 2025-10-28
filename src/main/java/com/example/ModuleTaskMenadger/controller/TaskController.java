@@ -12,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/task")
@@ -48,7 +50,6 @@ public class TaskController {
     public ResponseEntity<TaskDTO> createTask(@AuthenticationPrincipal CustomUserDetails customUserDetails, @RequestBody TaskDTO taskDTO, @RequestParam("hubId")Long id) {
         taskDTO.setHub_Id(id);
         taskDTO.setCompanyId(customUserDetails.getCompanyId());
-        System.out.println(taskDTO);
         TaskDTO createdTask = taskService.createTask(taskDTO);
         return ResponseEntity.ok(createdTask);
     }
@@ -69,12 +70,24 @@ public class TaskController {
 
     // Удалить задачу по id
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(@AuthenticationPrincipal CustomUserDetails customUserDetails,@PathVariable Long id) {
         boolean deleted = taskService.deleteTask(id);
         if (deleted) {
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+    @PostMapping("/tasks")
+    public ResponseEntity<?> getTaskAnalytics(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestBody Map<String, Long> payload) {
+        Long hubId = payload.get("hubId");
+        int totalTasks = taskService.getTotalTasks(hubId);
+        Map<String, Integer> tasksByStatus = taskService.getTasksCountByStatus(hubId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("total", totalTasks);
+        response.putAll(tasksByStatus);
+
+        return ResponseEntity.ok(response);
     }
 }

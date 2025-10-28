@@ -1,5 +1,6 @@
 package com.example.ModuleTaskMenadger.service;
 
+import com.example.ModuleTaskMenadger.Enum.TaskStatus;
 import com.example.ModuleTaskMenadger.dto.TaskDTO;
 import com.example.ModuleTaskMenadger.model.Task;
 import com.example.ModuleTaskMenadger.repository.CompanyRepository;
@@ -10,9 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -95,6 +94,21 @@ public class TaskService {
         }
         return false;
     }
+    public int getTotalTasks(Long hubId) {
+        return taskRepository.countTasksByProjectId(hubId);
+    }
+
+    public Map<String, Integer> getTasksCountByStatus(Long projectId) {
+        List<Object[]> result = taskRepository.countTasksGroupedByStatus(projectId);
+        Map<String, Integer> map = new HashMap<>();
+        for (Object[] row : result) {
+            TaskStatus status = (TaskStatus) row[0]; // enum
+            Long count = (Long) row[1];
+            map.put(status.name(), count.intValue()); // правильное преобразование enum в строку
+        }
+        return map;
+    }
+
 
     // Преобразование Entity в DTO
     private TaskDTO convertToDto(Task task) {

@@ -17,6 +17,9 @@ class ApiRoute {
   getUsers(){
     return `${this.BASE_URL}/auth/users/no-admins`
   }
+  changeUserRole(id:number){
+    return `${this.BASE_URL}/auth/users/${id}/role`
+  }
 
 
   creaeProject(){
@@ -28,6 +31,16 @@ class ApiRoute {
   getModuleForHub(id:number){
     return `${this.BASE_URL}/projects/hub/${id}`
   }
+  changeStatus(id:number){
+    return `${this.BASE_URL}/projects/changeStatus/${id}`
+  }
+  getArchivedProjects(){
+    return `${this.BASE_URL}/projects/archived`
+  }
+  getClosedProjectsCount(){
+    return `${this.BASE_URL}/projects/closed/count`
+  }
+  
   
   // В дальнейшем добавьте здесь другие пути API
   getAllNewsCompany(){

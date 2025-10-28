@@ -51,7 +51,7 @@ const App: React.FC = () => {
 
   return (
     <BrowserRouter>
-      {token && <NavBar />}
+      {token && <NavBar setToken={setToken} />}
       <Routes>
         <Route path="/register" element={<Registration />} />
         <Route

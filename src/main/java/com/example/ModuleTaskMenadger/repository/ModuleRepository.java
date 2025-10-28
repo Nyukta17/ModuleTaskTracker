@@ -11,4 +11,5 @@ public interface ModuleRepository extends JpaRepository<Module, Long> {
     boolean existsByName(String name);
 
     List<Module> findByNameIn(List<String> names);
+
 }

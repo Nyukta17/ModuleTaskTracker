@@ -15,7 +15,8 @@ import java.util.Optional;
 public interface UsersRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByUsername(String username);
     List<Users> findByCompanyId(Long companyId);
-    @Query("SELECT u FROM Users u JOIN u.roles r WHERE r.name <> 'ADMIN'")
-    List<Users> findAllExceptAdmins();
+    @Query("SELECT u FROM Users u JOIN u.roles r WHERE r.name <> 'ADMIN' AND u.company.id = :companyId")
+    List<Users> findAllExceptAdminsByCompanyId(@Param("companyId") Long companyId);
+
 
 }

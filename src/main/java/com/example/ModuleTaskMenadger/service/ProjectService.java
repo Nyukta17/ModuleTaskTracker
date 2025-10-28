@@ -1,5 +1,6 @@
 package com.example.ModuleTaskMenadger.service;
 
+import com.example.ModuleTaskMenadger.Enum.ProjectStatus;
 import com.example.ModuleTaskMenadger.dto.ModuleDTO;
 import com.example.ModuleTaskMenadger.dto.ProjectDTO;
 import com.example.ModuleTaskMenadger.model.Company;
@@ -9,6 +10,7 @@ import com.example.ModuleTaskMenadger.repository.CompanyRepository;
 import com.example.ModuleTaskMenadger.repository.ModuleRepository;
 import com.example.ModuleTaskMenadger.repository.ProjectModuleRepository;
 import com.example.ModuleTaskMenadger.repository.ProjectRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +52,7 @@ public class ProjectService {
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
         project.setCompany(company);
-
+        project.setProjectStatus(ProjectStatus.ACTIVE);
         Project savedProject = projectRepository.save(project);
 
         // Находим модули из базы
@@ -76,6 +78,23 @@ public class ProjectService {
 
         return toDTO(savedProject);
     }
+    @Transactional
+    public void changeStatusProject(Long projectId, ProjectStatus status) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("Project not found"));
+        project.setProjectStatus(status);
+        projectRepository.save(project);
+    }
+
+    public List<ProjectDTO> getArchivedProjectsForCompany(Long companyId) {
+        List<Project> projects = projectRepository.findByProjectStatusAndCompanyId(ProjectStatus.ARCHIVED, companyId);
+        return projects.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    public long countClosedProjectsForCompany(Long companyId) {
+        return projectRepository.countByProjectStatusAndCompanyId(ProjectStatus.CLOSED, companyId);
+    }
 
     @Transactional(readOnly = true)
     public List<ProjectDTO> getProjectsByCompany(Long companyId) {
@@ -95,6 +114,7 @@ public class ProjectService {
         dto.setName(project.getName());
         dto.setDescription(project.getDescription());
         dto.setCompanyId(project.getCompany().getId());
+        dto.setProjectStatus(project.getProjectStatus());
         return dto;
     }
     private ModuleDTO moduleDTO(Module module){

@@ -50,7 +50,7 @@ public class SecurityController {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(","));
 
-            String token = jwtService.generateToken(userDetails.getUsername(), roles,userDetails.getCompanyId());
+            String token = jwtService.generateToken(userDetails.getUsername(), roles,userDetails.getCompanyId(),userDetails.getUserId());
 
             return ResponseEntity.ok(new JWTResponse(token));
         } catch (AuthenticationException e) {
@@ -107,11 +107,15 @@ public class SecurityController {
                 .collect(Collectors.toList());
     }
     @GetMapping("/users/no-admins")
-    public ResponseEntity<List<UserDTO>> getUsersExceptAdmins() {
-        List<UserDTO> users = userService.getAllExceptAdmins();
+    public ResponseEntity<List<UserDTO>> getUsersExceptAdmins(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        List<UserDTO> users = userService.getAllExceptAdmins(customUserDetails.getCompanyId());
         return ResponseEntity.ok(users);
     }
-
+    @PutMapping("users/{id}/role")
+    public ResponseEntity<?> changeUserRole(@AuthenticationPrincipal CustomUserDetails customUserDetails,@PathVariable Long id, @RequestBody() String newRoleName) {
+        userService.changeUserRole(id, newRoleName);
+        return ResponseEntity.ok().build();
+    }
 
 
 }

@@ -2,6 +2,8 @@ package com.example.ModuleTaskMenadger.repository;
 
 import com.example.ModuleTaskMenadger.model.News;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,4 +12,6 @@ import java.util.List;
 public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findAllByCompanyId(Long companyId);
     List<News> findAllByCompanyIdAndProjectId(Long companyId, Long projectId);
+    @Query("SELECT COUNT(n) FROM News n WHERE n.project.id = :projectId")
+    long countByProjectId(@Param("projectId") Long projectId);
 }

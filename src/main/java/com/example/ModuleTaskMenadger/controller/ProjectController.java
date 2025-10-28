@@ -1,9 +1,12 @@
 package com.example.ModuleTaskMenadger.controller;
 
+import com.example.ModuleTaskMenadger.Enum.ProjectStatus;
 import com.example.ModuleTaskMenadger.details.CustomUserDetails;
 import com.example.ModuleTaskMenadger.dto.ModuleDTO;
 import com.example.ModuleTaskMenadger.dto.ProjectDTO;
+import com.example.ModuleTaskMenadger.model.Project;
 import com.example.ModuleTaskMenadger.service.ProjectService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,31 @@ public class ProjectController {
         ProjectDTO created = projectService.createProject(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+    @PutMapping("/changeStatus/{id}")
+    public ResponseEntity<?> changeStatus(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                          @PathVariable Long id,
+                                          @RequestBody ProjectStatus status) {
+
+        try {
+            projectService.changeStatusProject(id, status);
+            return ResponseEntity.ok().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            // Обработка ошибки, если статус не валидный enum
+            return ResponseEntity.badRequest().body("Некорректное значение статуса");
+        }
+    }
+    @GetMapping("/archived")
+    public ResponseEntity<List<ProjectDTO>> getArchivedProjects(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        List<ProjectDTO> archived = projectService.getArchivedProjectsForCompany(customUserDetails.getCompanyId());
+        return ResponseEntity.ok(archived);
+    }
+    @GetMapping("/closed/count")
+    public ResponseEntity<Long> getClosedProjectsCount(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        long count = projectService.countClosedProjectsForCompany(customUserDetails.getCompanyId());
+        return ResponseEntity.ok(count);
+    }
 
     @GetMapping("/getAllProject")
     public ResponseEntity<List<ProjectDTO>> getProjectsByCompany(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
@@ -40,4 +68,5 @@ public class ProjectController {
         List<ModuleDTO> modules = projectService.getModuleById(id);
         return ResponseEntity.ok(modules);
     }
+
 }

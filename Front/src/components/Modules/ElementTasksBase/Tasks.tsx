@@ -10,7 +10,7 @@ type Task = {
   title: string;
   description: string;
   assignedUser: string;
-  status: "NEW" | "IN_PROGRESS" | "TESTING" | "DONE";
+  status: "NEW" | "IN_PROGRESS" | "TESTING" | "COMPLETED";
   priority?: "LOW" | "MEDIUM" | "HIGH";
   dueDate?: string; // ISO 8601 DATETIME string
 };
@@ -166,7 +166,7 @@ const TaskForm: React.FC<{ initialTask?: Task; onSave?: () => void;projectHubId:
           <option value="NEW">Новая</option>
           <option value="IN_PROGRESS">В работе</option>
           <option value="TESTING">В тестировании</option>
-          <option value="DONE">Выполнена</option>
+          <option value="COMPLETED">Выполнена</option>
         </Form.Select>
       </Form.Group>
 

@@ -1,5 +1,6 @@
 package com.example.ModuleTaskMenadger.model;
 
+import com.example.ModuleTaskMenadger.Enum.ProjectStatus;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -22,6 +23,8 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectModule> projectModules;
 
+    @Enumerated(EnumType.STRING)
+    private ProjectStatus projectStatus;
     // геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,4 +40,12 @@ public class Project {
 
     public List<ProjectModule> getProjectModules() { return projectModules; }
     public void setProjectModules(List<ProjectModule> projectModules) { this.projectModules = projectModules; }
+
+    public ProjectStatus getProjectStatus() {
+        return projectStatus;
+    }
+
+    public void setProjectStatus(ProjectStatus projectStatus) {
+        this.projectStatus = projectStatus;
+    }
 }
