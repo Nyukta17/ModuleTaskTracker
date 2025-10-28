@@ -6,7 +6,7 @@ interface NavBarProps {
   setToken: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ setToken })  => {
+const NavBar: React.FC<NavBarProps> = ({ setToken }) => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -23,7 +23,7 @@ const NavBar: React.FC<NavBarProps> = ({ setToken })  => {
             .join('')
         );
         const payload = JSON.parse(jsonPayload);
-        
+
         setUserRole(payload.role);
       } catch {
         setUserRole(null);
@@ -47,7 +47,15 @@ const NavBar: React.FC<NavBarProps> = ({ setToken })  => {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
         <Navbar.Brand href="/"></Navbar.Brand>
+
         <Nav className="me-auto">
+          <Button
+            variant="outline-light"
+            className="me-2"
+            onClick={() => navigate('/')}
+          >
+            На главную
+          </Button>
           <Button variant="outline-light" onClick={goToAdmin} className="me-2" hidden={userRole !== 'ROLE_ADMIN'}>
             Админ-панель
           </Button>

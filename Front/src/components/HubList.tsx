@@ -216,7 +216,7 @@ const HubList: React.FC = () => {
                   {userRole === "ROLE_ADMIN" && (
                     <Dropdown>
                       <Dropdown.Toggle
-                        variant="secondary"
+                        variant="primary"
                         id={`dropdown-status-${hub.id}`}
                         size="sm"
                       >

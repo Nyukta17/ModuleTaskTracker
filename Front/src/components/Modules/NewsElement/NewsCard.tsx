@@ -118,9 +118,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm("Удалить новость?")) {
-                   deleteNews()
-                }
+                deleteNews()
+                
               }}
             >
               Удалить

@@ -127,7 +127,7 @@ const MyTasks: React.FC<MyTasksProps> = ({ hubId, isActive }) => {
                   <td style={{ width: "30%", whiteSpace: "nowrap" }}>
                     <Button
                       size="sm"
-                      variant="secondary"
+                      variant="warning"
                       disabled={status === "NEW"}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -139,7 +139,7 @@ const MyTasks: React.FC<MyTasksProps> = ({ hubId, isActive }) => {
                     </Button>
                     <Button
                       size="sm"
-                      variant="primary"
+                      variant="success"
                       disabled={status === "COMPLETED"}
                       onClick={(e) => {
                         e.stopPropagation();

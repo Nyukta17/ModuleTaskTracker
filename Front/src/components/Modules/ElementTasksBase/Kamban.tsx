@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form } from "react-bootstrap";
 import ApiRoute from "../../../api/ApiRoute";
+import { jwtDecode } from "jwt-decode";
 import { fetchCompanyUsers } from "../../Funcions/GetUsers";
 
 const api = new ApiRoute();
@@ -20,10 +21,14 @@ const statuses: Task["status"][] = ["NEW", "IN_PROGRESS", "TESTING", "COMPLETED"
 
 interface MyComponentProps {
   projectHubId: string;
-  isActive:boolean;
+  isActive: boolean;
 }
 
-const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
+interface JwtPayload {
+  role: string;
+}
+
+const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId, isActive }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,29 +36,20 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [users, setUsers] = useState<{ id: string; username: string }[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const token = localStorage.getItem("jwtToken");
 
-  const changeTaskStatus = async (task: Task, newStatus: Task["status"]) => {
-    if (!token) return;
-    try {
-      const updatedTask = { ...task, status: newStatus };
-      const res = await fetch(api.updateTask(task.id), {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(updatedTask),
-      });
-      if (!res.ok) throw new Error("Ошибка обновления статуса");
-      await fetchTasks();
-    } catch (e: any) {
-      setError(e.message);
+  const token = localStorage.getItem("jwtToken");
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded: JwtPayload = jwtDecode(token);
+        setUserRole(decoded.role);
+      } catch {
+        setUserRole(null);
+      }
     }
-  };
- useEffect(() => {
-    if (isActive) {
-      fetchTasks();
-      fetchUsers();
-    }
-  }, [isActive, projectHubId]);
+  }, [token]);
 
   const fetchTasks = async () => {
     if (!token) {
@@ -79,6 +75,7 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
+      // Ваш fetchCompanyUsers должен возвращать список пользователей
       const fetchedUsers = await fetchCompanyUsers();
       setUsers(fetchedUsers);
     } finally {
@@ -86,10 +83,50 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
     }
   };
 
+  const changeTaskStatus = async (task: Task, newStatus: Task["status"]) => {
+    if (!token) return;
+    try {
+      const updatedTask = { ...task, status: newStatus };
+      const res = await fetch(api.updateTask(task.id), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updatedTask),
+      });
+      if (!res.ok) throw new Error("Ошибка обновления статуса");
+      await fetchTasks();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const bulkCompleteTasks = async () => {
+    if (!token) return;
+    try {
+      const completedTaskIds = tasks.filter(t => t.status === "COMPLETED").map(t => t.id);
+      if (completedTaskIds.length === 0) return;
+
+      const res = await fetch(api.bulkCompleteTasks(), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ids: completedTaskIds }),
+      });
+
+      if (!res.ok) throw new Error("Ошибка массового обновления задач");
+
+      await fetchTasks();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
   const openView = (task: Task) => {
     setEditingTask(task);
     setIsEditMode(false);
   };
+
   const closeModal = () => {
     setEditingTask(null);
     setIsEditMode(false);
@@ -103,7 +140,6 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
 
   const handleSave = async () => {
     if (!editingTask || !token) return;
-
     try {
       const res = await fetch(api.updateTask(editingTask.id), {
         method: "PUT",
@@ -114,13 +150,19 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
         body: JSON.stringify(editingTask),
       });
       if (!res.ok) throw new Error("Ошибка при сохранении задачи");
-
       await fetchTasks();
       closeModal();
     } catch (e: any) {
       setError(e.message);
     }
   };
+
+  useEffect(() => {
+    if (isActive) {
+      fetchTasks();
+      fetchUsers();
+    }
+  }, [isActive, projectHubId]);
 
   if (loading) return <div>Загрузка задач...</div>;
 
@@ -130,131 +172,100 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
         <div className="text-danger">Ошибка: {error}</div>
       </Container>
     );
-    const bulkCompleteTasks = async () => {
-  if (!token) return;
-  try {
-    const completedTaskIds = tasks
-      .filter(t => t.status === "COMPLETED")
-      .map(t => t.id);
-
-    if (completedTaskIds.length === 0) return;
-
-    const res = await fetch(api.bulkCompleteTasks(), {
-      method: "PUT", // или POST, как настроено
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ ids: completedTaskIds }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Ошибка массового обновления задач");
-    }
-
-    await fetchTasks(); // Обновить список задач после успешной операции
-  } catch (e: any) {
-    setError(e.message);
-  }
-};
-
 
   return (
     <Container fluid>
-    <h3>Канбан-доска задач</h3>
-    <Row>
-      {statuses.map((status) => (
-        <Col key={status}>
-          <h5 className="d-flex align-items-center">
-            {status === "NEW"
-              ? "Новые"
-              : status === "IN_PROGRESS"
-              ? "В работе"
-              : status === "TESTING"
-              ? "В тестировании"
-              : "Выполнены"}
-            {status === "COMPLETED" && (
-              <Button
-                variant="success"
-                size="sm"
-                className="ms-2"
-                title="Отправить все выполненные задачи"
-                onClick={bulkCompleteTasks}
-              >
-                ✔
-              </Button>
-            )}
-          </h5>
-          <div
-            style={{
-              minHeight: "400px",
-              backgroundColor: "#f8f9fa",
-              padding: "8px",
-              borderRadius: "4px",
-            }}
-          >
-            {tasks
-              .filter((t) => t.status === status)
-              .map((task) => (
-                <Card
-                  key={task.id}
-                  className="mb-2"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => openView(task)}
-                >
-                  <Card.Body>
-                    <Card.Title style={{ fontSize: "1rem" }}>{task.title}</Card.Title>
-                    <Card.Text style={{ fontSize: "0.85rem", color: "#555" }}>
-                      Исполнитель: {task.assignedUser || "Не назначен"}
-                    </Card.Text>
-                    <Card.Text style={{ fontSize: "0.75rem", color: "#666" }}>
-                      Описание: {task.description}
-                    </Card.Text>
-                    <Card.Text style={{ fontSize: "0.7rem", color: "#999" }}>
-                      Срок до: {new Date(task.dueDate).toLocaleDateString()}
-                    </Card.Text>
+      <h3>Канбан-доска задач</h3>
+      <Row>
+        {statuses.map((status) => (
+          <Col key={status}>
+            <h5 className="d-flex align-items-center">
+              {status === "NEW"
+                ? "Новые"
+                : status === "IN_PROGRESS"
+                ? "В работе"
+                : status === "TESTING"
+                ? "В тестировании"
+                : "Выполнены"}
+              {status === "COMPLETED" &&
+                (userRole === "ROLE_ADMIN" || userRole === "ROLE_MANAGER") && (
+                  <Button
+                    variant="success"
+                    size="sm"
+                    className="ms-2"
+                    title="Отправить все выполненные задачи"
+                    onClick={bulkCompleteTasks}
+                  >
+                    ✔
+                  </Button>
+                )}
+            </h5>
+            <div
+              style={{
+                minHeight: "400px",
+                backgroundColor: "#f8f9fa",
+                padding: "8px",
+                borderRadius: "4px",
+              }}
+            >
+              {tasks
+                .filter((t) => t.status === status)
+                .map((task) => (
+                  <Card
+                    key={task.id}
+                    className="mb-2"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => openView(task)}
+                  >
+                    <Card.Body>
+                      <Card.Title style={{ fontSize: "1rem" }}>{task.title}</Card.Title>
+                      <Card.Text style={{ fontSize: "0.85rem", color: "#555" }}>
+                        Исполнитель: {task.assignedUser || "Не назначен"}
+                      </Card.Text>
+                      <Card.Text style={{ fontSize: "0.75rem", color: "#666" }}>
+                        Описание: {task.description}
+                      </Card.Text>
+                      <Card.Text style={{ fontSize: "0.7rem", color: "#999" }}>
+                        Срок до: {new Date(task.dueDate).toLocaleDateString()}
+                      </Card.Text>
 
-                    <div>
-                      {/* Кнопка назад по статусу */}
-                      {task.status !== "NEW" && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const currentIdx = statuses.indexOf(task.status);
-                            if (currentIdx > 0) {
-                              changeTaskStatus(task, statuses[currentIdx - 1]);
-                            }
-                          }}
-                        >
-                          ←
-                        </Button>
-                      )}
-
-                      {/* Кнопка вперед по статусу */}
-                      {task.status !== "COMPLETED" && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const currentIdx = statuses.indexOf(task.status);
-                            if (currentIdx < statuses.length - 1) {
-                              changeTaskStatus(task, statuses[currentIdx + 1]);
-                            }
-                          }}
-                        >
-                          →
-                        </Button>
-                      )}
-                    </div>
-                  </Card.Body>
-                </Card>
-              ))}
-          </div>
-        </Col>
-      ))}
-    </Row>
-
+                      <div>
+                        {task.status !== "NEW" && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentIdx = statuses.indexOf(task.status);
+                              if (currentIdx > 0) {
+                                changeTaskStatus(task, statuses[currentIdx - 1]);
+                              }
+                            }}
+                          >
+                            ←
+                          </Button>
+                        )}
+                        {task.status !== "COMPLETED" && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentIdx = statuses.indexOf(task.status);
+                              if (currentIdx < statuses.length - 1) {
+                                changeTaskStatus(task, statuses[currentIdx + 1]);
+                              }
+                            }}
+                          >
+                            →
+                          </Button>
+                        )}
+                      </div>
+                    </Card.Body>
+                  </Card>
+                ))}
+            </div>
+          </Col>
+        ))}
+      </Row>
 
       <Modal show={!!editingTask} onHide={closeModal}>
         <Modal.Header closeButton>
@@ -303,10 +314,10 @@ const KanbanBoard: React.FC<MyComponentProps> = ({ projectHubId,isActive }) => {
                           {status === "NEW"
                             ? "Новая"
                             : status === "IN_PROGRESS"
-                              ? "В работе"
-                              : status === "TESTING"
-                                ? "В тестировании"
-                                : "Выполнена"}
+                            ? "В работе"
+                            : status === "TESTING"
+                            ? "В тестировании"
+                            : "Выполнена"}
                         </option>
                       ))}
                     </Form.Select>

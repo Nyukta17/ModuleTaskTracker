@@ -1,30 +1,14 @@
-# Этап сборки
-FROM maven:3.8.6-openjdk-17 AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+# Используем официальный облегчённый образ OpenJDK 21
+FROM openjdk:21-jdk-slim
 
-# Этап ранта# Используем официальный образ OpenJDK 17 Slim
-FROM openjdk:17-jdk-slim
-
-# Устанавливаем рабочую директорию внутри контейнера
+# Задаём рабочую директорию внутри контейнера
 WORKDIR /app
 
-# Копируем собранный jar файл в контейнер
-COPY target/*.jar app.jar
-# Используем официальный образ OpenJDK 17 Slim
-FROM openjdk:17-jdk-slim
+# Копируем jar-файл вашего приложения (убедитесь, что имя файла совпадает)
+COPY target/ModuleTaskMenadger-0.0.1-SNAPSHOT.jar app.jar
 
-# Устанавливаем рабочую директорию внутри контейнера
-WORKDIR /app
-
-# Копируем собранный jar файл в контейнер
-COPY target/*.jar app.jar
-
-# Открываем порт для доступа к приложению
+# Открываем порт 8080
 EXPOSE 8080
 
-# Команда для запуска приложения при старте контейнера
+# Команда запуска приложения
 ENTRYPOINT ["java", "-jar", "app.jar"]
-

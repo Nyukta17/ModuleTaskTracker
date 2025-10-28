@@ -61,6 +61,7 @@ public class TaskController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    
     @PutMapping("/completed")
     public ResponseEntity<?> completed_tasks(@AuthenticationPrincipal CustomUserDetails customUserDetails,@RequestBody IdsWrapper wrapper){
         List<Long> listId = wrapper.getIds();
